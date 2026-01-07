@@ -13,10 +13,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ColorLens
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +47,8 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showCompanionDialog by remember { mutableStateOf(false) }
+    var showPregnancyDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -71,8 +77,80 @@ fun SettingsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // ============ SEÇÃO MINHA GESTAÇÃO (NOVA - ADITIVA) ============
+            item {
+                Text(
+                    text = "🤰 Minha Gestação",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Semana da gestação
+            item {
+                SettingsCard(
+                    icon = Icons.Outlined.CalendarMonth,
+                    title = "Semana da Gestação",
+                    subtitle = if (userData.currentWeek > 0) 
+                        "Semana ${userData.currentWeek}" 
+                    else 
+                        "Não informada",
+                    onClick = { showPregnancyDialog = true }
+                )
+            }
+            
+            // ============ SEÇÃO INCLUSÃO FAMILIAR (NOVA - ADITIVA) ============
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "👨‍👩‍👧 Você e quem te acompanha",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Pessoa acompanhante
+            item {
+                SettingsCard(
+                    icon = Icons.Outlined.Favorite,
+                    title = "Pessoa Acompanhante",
+                    subtitle = userData.companionName.ifBlank { "Parceiro(a), familiar ou amigo(a) - opcional" },
+                    onClick = { showCompanionDialog = true }
+                )
+            }
+            
+            // Mensagem de apoio
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "💕",
+                            fontSize = 24.sp
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "A gestação é uma jornada mais leve quando compartilhada. Conte com sua rede de apoio!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            
             // Seção de Personalização
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "🎨 Personalização",
                     style = MaterialTheme.typography.titleMedium,
@@ -139,6 +217,34 @@ fun SettingsScreen(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false }
+        )
+    }
+    
+    // Dialog para pessoa acompanhante (NOVO - ADITIVO)
+    if (showCompanionDialog) {
+        CompanionDialog(
+            currentName = userData.companionName,
+            onSave = { name ->
+                scope.launch {
+                    preferencesManager.saveCompanionName(name)
+                }
+                showCompanionDialog = false
+            },
+            onDismiss = { showCompanionDialog = false }
+        )
+    }
+    
+    // Dialog para semana da gestação (NOVO - ADITIVO)
+    if (showPregnancyDialog) {
+        PregnancyWeekDialog(
+            currentWeek = userData.currentWeek,
+            onSave = { week ->
+                scope.launch {
+                    preferencesManager.saveCurrentWeek(week)
+                }
+                showPregnancyDialog = false
+            },
+            onDismiss = { showPregnancyDialog = false }
         )
     }
 }
@@ -358,5 +464,149 @@ private fun getThemeDisplayName(theme: AppTheme): String = when(theme) {
     AppTheme.BOY -> "Menino (Azul)"
     AppTheme.NEUTRAL -> "Neutro (Verde)"
     AppTheme.CUSTOM -> "Personalizado"
+}
+
+// ============ NOVOS DIALOGS - Inclusão Familiar (ADITIVOS) ============
+
+/**
+ * Dialog para informar pessoa acompanhante
+ * Campo opcional - pode ser parceiro(a), familiar ou amigo(a)
+ */
+@Composable
+private fun CompanionDialog(
+    currentName: String,
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Pessoa Acompanhante 💕",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Quem está te acompanhando nessa jornada? Pode ser seu parceiro(a), familiar, amigo(a) ou qualquer pessoa especial.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+                
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Nome (opcional)") },
+                    placeholder = { Text("Ex: João, Maria, Vovó Ana...") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                Text(
+                    text = "💡 Este campo é opcional e privado. Serve para personalizar sua experiência.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(name) },
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
+/**
+ * Dialog para informar semana da gestação
+ */
+@Composable
+private fun PregnancyWeekDialog(
+    currentWeek: Int,
+    onSave: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var weekText by remember { mutableStateOf(if (currentWeek > 0) currentWeek.toString() else "") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Semana da Gestação 📅",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Em qual semana de gestação você está? Essa informação ajuda a personalizar os checklists e conteúdos para você.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+                
+                OutlinedTextField(
+                    value = weekText,
+                    onValueChange = { 
+                        weekText = it.filter { char -> char.isDigit() }
+                        errorMessage = null
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Semana (1-42)") },
+                    placeholder = { Text("Ex: 20") },
+                    singleLine = true,
+                    isError = errorMessage != null,
+                    supportingText = errorMessage?.let { { Text(it, color = Color.Red) } },
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                Text(
+                    text = "💡 Você pode perguntar ao seu médico ou calcular a partir da data da última menstruação.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { 
+                    val week = weekText.toIntOrNull()
+                    when {
+                        week == null && weekText.isNotBlank() -> {
+                            errorMessage = "Digite um número válido"
+                        }
+                        week != null && (week < 1 || week > 42) -> {
+                            errorMessage = "A semana deve estar entre 1 e 42"
+                        }
+                        else -> {
+                            onSave(week ?: 0)
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        shape = RoundedCornerShape(20.dp)
+    )
 }
 

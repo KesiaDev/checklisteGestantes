@@ -27,6 +27,9 @@ import com.gestantes.checklist.ui.onboarding.OnboardingScreen
 import com.gestantes.checklist.ui.search.SearchScreen
 import com.gestantes.checklist.ui.settings.SettingsScreen
 import com.gestantes.checklist.ui.subscription.SubscriptionScreen
+import com.gestantes.checklist.ui.weekly.WeeklyChecklistScreen
+import com.gestantes.checklist.ui.timeline.TimelineScreen
+import com.gestantes.checklist.ui.content.PregnancyContentScreen
 
 sealed class Screen(val route: String) {
     data object Onboarding : Screen("onboarding")
@@ -46,6 +49,11 @@ sealed class Screen(val route: String) {
     data object Growth : Screen("growth")
     data object Search : Screen("search")
     data object Settings : Screen("settings")
+    
+    // NOVAS TELAS - Expansão da Gestação (ADITIVAS)
+    data object WeeklyChecklist : Screen("weekly_checklist")
+    data object Timeline : Screen("timeline")
+    data object PregnancyContent : Screen("pregnancy_content")
 }
 
 @Composable
@@ -124,6 +132,16 @@ fun AppNavigation(navController: NavHostController) {
                 },
                 onSettingsClick = {
                     navController.navigate(Screen.Settings.route)
+                },
+                // NOVOS CALLBACKS - Expansão da Gestação (ADITIVOS)
+                onWeeklyChecklistClick = {
+                    navController.navigate(Screen.WeeklyChecklist.route)
+                },
+                onTimelineClick = {
+                    navController.navigate(Screen.Timeline.route)
+                },
+                onPregnancyContentClick = {
+                    navController.navigate(Screen.PregnancyContent.route)
                 }
             )
         }
@@ -207,6 +225,29 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        // ============ NOVAS ROTAS - Expansão da Gestação (ADITIVAS) ============
+        
+        composable(Screen.WeeklyChecklist.route) {
+            WeeklyChecklistScreen(
+                onBackClick = { navController.popBackStack() },
+                currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 12
+            )
+        }
+        
+        composable(Screen.Timeline.route) {
+            TimelineScreen(
+                onBackClick = { navController.popBackStack() },
+                currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+            )
+        }
+        
+        composable(Screen.PregnancyContent.route) {
+            PregnancyContentScreen(
+                onBackClick = { navController.popBackStack() },
+                currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
             )
         }
     }

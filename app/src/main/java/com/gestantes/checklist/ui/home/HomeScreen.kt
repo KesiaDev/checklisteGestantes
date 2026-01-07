@@ -85,7 +85,11 @@ fun HomeScreen(
     onHistoryClick: () -> Unit = {},
     onGrowthClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    // NOVOS CALLBACKS - Expansão da Gestação (ADITIVOS)
+    onWeeklyChecklistClick: () -> Unit = {},
+    onTimelineClick: () -> Unit = {},
+    onPregnancyContentClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val preferencesManager = remember { UserPreferencesManager(context) }
@@ -175,6 +179,51 @@ fun HomeScreen(
             
             item {
                 DailyComfortCard(momName = userData.momName)
+            }
+            
+            // ============ MINHA GESTAÇÃO (NOVA SEÇÃO - ADITIVA) ============
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "🤰 Minha Gestação",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Acompanhamento semanal da gestação
+            item {
+                PregnancyFeatureCard(
+                    emoji = "📅",
+                    title = "Checklists Semanais",
+                    description = "O que fazer em cada semana da gestação",
+                    color = Color(0xFF9C27B0),
+                    onClick = onWeeklyChecklistClick
+                )
+            }
+            
+            // Linha do tempo
+            item {
+                PregnancyFeatureCard(
+                    emoji = "🌟",
+                    title = "Linha do Tempo",
+                    description = "Acompanhe os marcos da sua gestação",
+                    color = Color(0xFFFF5722),
+                    onClick = onTimelineClick
+                )
+            }
+            
+            // Conteúdos por fase
+            item {
+                PregnancyFeatureCard(
+                    emoji = "📚",
+                    title = "Conteúdos por Fase",
+                    description = "Informações acolhedoras para cada trimestre",
+                    color = Color(0xFF009688),
+                    onClick = onPregnancyContentClick
+                )
             }
             
             // ============ ECOSSISTEMA DO BEBÊ ============
@@ -519,6 +568,7 @@ private fun BabyEcosystemCard(
 private fun WelcomeCard(userData: UserData) {
     val momName = userData.momName.ifBlank { "mamãe" }
     val babies = userData.babies
+    val companionName = userData.companionName
     
     // Gera a saudação personalizada
     val greeting = when {
@@ -530,6 +580,13 @@ private fun WelcomeCard(userData: UserData) {
             val otherBabies = babyNames.dropLast(1).joinToString(", ")
             "Olá, $momName! ✨\nMamãe de $otherBabies e $lastBaby 💕"
         }
+    }
+    
+    // Mensagem inclusiva para acompanhante (NOVO - ADITIVO)
+    val supportMessage = if (companionName.isNotBlank()) {
+        "Você e $companionName juntos nessa jornada! 💕"
+    } else {
+        "Organize sua jornada com carinho."
     }
     
     Card(
@@ -553,7 +610,7 @@ private fun WelcomeCard(userData: UserData) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Organize sua jornada com carinho.",
+                text = supportMessage,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
@@ -811,4 +868,81 @@ private fun DisclaimerText() {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     )
+}
+
+// ============ NOVOS COMPONENTES - Expansão da Gestação (ADITIVOS) ============
+
+/**
+ * Card para as novas funcionalidades da gestação
+ * Não requer Premium - disponível para todas as usuárias
+ */
+@Composable
+private fun PregnancyFeatureCard(
+    emoji: String,
+    title: String,
+    description: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.12f)
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = 26.sp
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(14.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurfaceVariant
+                )
+            }
+            
+            // Indicador de "grátis" para mostrar que não precisa de premium
+            Surface(
+                color = Color(0xFF4CAF50).copy(alpha = 0.2f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "GRÁTIS",
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2E7D32),
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
+    }
 }

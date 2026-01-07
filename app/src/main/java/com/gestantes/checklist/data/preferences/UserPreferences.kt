@@ -52,7 +52,11 @@ data class UserData(
     val momName: String = "",
     val babies: List<Baby> = emptyList(),
     val onboardingCompleted: Boolean = false,
-    val appTheme: AppTheme = AppTheme.GIRL // Tema padrão
+    val appTheme: AppTheme = AppTheme.GIRL, // Tema padrão
+    // Novos campos para inclusão familiar (ADITIVOS)
+    val companionName: String = "", // Nome da pessoa acompanhante (opcional)
+    val expectedDueDate: String? = null, // Data prevista do parto (formato: "dd/MM/yyyy")
+    val currentWeek: Int = 0 // Semana atual da gestação (calculada ou informada)
 )
 
 /**
@@ -67,6 +71,10 @@ class UserPreferencesManager(private val context: Context) {
         private val BABIES_JSON_KEY = stringPreferencesKey("babies_json")
         private val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
         private val APP_THEME_KEY = stringPreferencesKey("app_theme")
+        // Novas chaves para inclusão familiar (ADITIVAS)
+        private val COMPANION_NAME_KEY = stringPreferencesKey("companion_name")
+        private val EXPECTED_DUE_DATE_KEY = stringPreferencesKey("expected_due_date")
+        private val CURRENT_WEEK_KEY = stringPreferencesKey("current_week")
     }
     
     /**
@@ -77,6 +85,10 @@ class UserPreferencesManager(private val context: Context) {
         val babiesJson = preferences[BABIES_JSON_KEY] ?: "[]"
         val onboardingCompleted = preferences[ONBOARDING_COMPLETED_KEY] ?: false
         val themeStr = preferences[APP_THEME_KEY] ?: AppTheme.GIRL.name
+        // Novos campos para inclusão familiar
+        val companionName = preferences[COMPANION_NAME_KEY] ?: ""
+        val expectedDueDate = preferences[EXPECTED_DUE_DATE_KEY]
+        val currentWeekStr = preferences[CURRENT_WEEK_KEY] ?: "0"
         
         val babies: List<Baby> = try {
             val type = object : TypeToken<List<Baby>>() {}.type
@@ -91,11 +103,20 @@ class UserPreferencesManager(private val context: Context) {
             AppTheme.GIRL
         }
         
+        val currentWeek = try {
+            currentWeekStr.toInt()
+        } catch (e: Exception) {
+            0
+        }
+        
         UserData(
             momName = momName,
             babies = babies,
             onboardingCompleted = onboardingCompleted,
-            appTheme = appTheme
+            appTheme = appTheme,
+            companionName = companionName,
+            expectedDueDate = expectedDueDate,
+            currentWeek = currentWeek
         )
     }
     
@@ -204,6 +225,58 @@ class UserPreferencesManager(private val context: Context) {
     suspend fun clearAllData() {
         context.dataStore.edit { preferences ->
             preferences.clear()
+        }
+    }
+    
+    // ============ NOVOS MÉTODOS PARA INCLUSÃO FAMILIAR (ADITIVOS) ============
+    
+    /**
+     * Salva o nome da pessoa acompanhante (opcional)
+     * Pode ser parceiro(a), familiar, amigo(a) - quem apoiar na jornada
+     */
+    suspend fun saveCompanionName(name: String) {
+        context.dataStore.edit { preferences ->
+            preferences[COMPANION_NAME_KEY] = name
+        }
+    }
+    
+    /**
+     * Salva a data prevista do parto
+     * Formato esperado: "dd/MM/yyyy"
+     */
+    suspend fun saveExpectedDueDate(date: String?) {
+        context.dataStore.edit { preferences ->
+            if (date != null) {
+                preferences[EXPECTED_DUE_DATE_KEY] = date
+            } else {
+                preferences.remove(EXPECTED_DUE_DATE_KEY)
+            }
+        }
+    }
+    
+    /**
+     * Salva a semana atual da gestação
+     */
+    suspend fun saveCurrentWeek(week: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[CURRENT_WEEK_KEY] = week.toString()
+        }
+    }
+    
+    /**
+     * Salva dados da gestação (data prevista e semana são calculados/informados)
+     */
+    suspend fun savePregnancyData(
+        expectedDueDate: String? = null,
+        currentWeek: Int = 0,
+        companionName: String = ""
+    ) {
+        context.dataStore.edit { preferences ->
+            if (expectedDueDate != null) {
+                preferences[EXPECTED_DUE_DATE_KEY] = expectedDueDate
+            }
+            preferences[CURRENT_WEEK_KEY] = currentWeek.toString()
+            preferences[COMPANION_NAME_KEY] = companionName
         }
     }
 }
