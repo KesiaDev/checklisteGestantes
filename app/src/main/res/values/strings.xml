@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Checklist para Gestantes</string>
+    
+    <!-- Home -->
+    <string name="welcome_message">Olá, mamãe! ✨\nOrganize sua jornada com carinho.</string>
+    
+    <!-- Categorias -->
+    <string name="category_maternidade">Mala da Maternidade</string>
+    <string name="category_prenatal">Pré-natal</string>
+    <string name="category_posparto">Pós-parto</string>
+    
+    <!-- Descrições dos cards -->
+    <string name="desc_maternidade">Itens essenciais para o grande dia</string>
+    <string name="desc_prenatal">Acompanhe seus cuidados</string>
+    <string name="desc_posparto">Prepare-se para a nova fase</string>
+    
+    <!-- Ações -->
+    <string name="reset_checklist">Resetar checklist</string>
+    <string name="confirm_reset">Confirmar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="reset_dialog_title">Resetar checklist?</string>
+    <string name="reset_dialog_message">Todos os itens serão desmarcados.</string>
+    
+    <!-- Progresso -->
+    <string name="progress_format">%1$d de %2$d concluídos</string>
+    
+    <!-- Aviso legal -->
+    <string name="legal_disclaimer">Este aplicativo não substitui acompanhamento médico. Seu objetivo é apenas auxiliar na organização da rotina da gestante.</string>
+    
+    <!-- Navegação -->
+    <string name="back">Voltar</string>
+</resources>
+
