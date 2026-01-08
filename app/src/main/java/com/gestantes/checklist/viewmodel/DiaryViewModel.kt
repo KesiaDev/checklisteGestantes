@@ -47,22 +47,29 @@ class DiaryViewModel(application: Application) : AndroidViewModel(application) {
         _searchQuery.value = query
     }
     
+    /**
+     * Salva uma entrada do diário
+     * EXPANDIDO: Agora aceita parâmetro involvesCompanion (ADITIVO)
+     */
     fun saveEntry(
         title: String,
         content: String,
         emotion: Emotion,
-        existingEntry: DiaryEntry? = null
+        existingEntry: DiaryEntry? = null,
+        involvesCompanion: Boolean = false // EXPANSÃO: momento compartilhado
     ) {
         viewModelScope.launch {
             val entry = existingEntry?.copy(
                 title = title,
                 content = content,
                 emotion = emotion,
-                updatedAt = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis(),
+                involvesCompanion = involvesCompanion // EXPANSÃO
             ) ?: DiaryEntry(
                 title = title,
                 content = content,
-                emotion = emotion
+                emotion = emotion,
+                involvesCompanion = involvesCompanion // EXPANSÃO
             )
             
             val id = diaryDao.insert(entry)

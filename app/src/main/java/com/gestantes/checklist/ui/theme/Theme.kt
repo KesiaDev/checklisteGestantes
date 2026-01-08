@@ -11,10 +11,10 @@ import androidx.core.view.WindowCompat
 import com.gestantes.checklist.data.preferences.AppTheme
 
 /**
- * Cria o esquema de cores baseado no tema selecionado
+ * Função auxiliar para criar o esquema de cores a partir de uma paleta
  */
-private fun getColorScheme(appTheme: AppTheme) = when(appTheme) {
-    AppTheme.GIRL -> lightColorScheme(
+private fun createColorScheme(colors: Any) = when(colors) {
+    is GirlThemeColors -> lightColorScheme(
         primary = GirlThemeColors.Primary,
         primaryContainer = GirlThemeColors.PrimaryContainer,
         onPrimary = GirlThemeColors.OnPrimary,
@@ -38,57 +38,36 @@ private fun getColorScheme(appTheme: AppTheme) = when(appTheme) {
         error = Error,
         onError = OnError
     )
-    
-    AppTheme.BOY -> lightColorScheme(
-        primary = BoyThemeColors.Primary,
-        primaryContainer = BoyThemeColors.PrimaryContainer,
-        onPrimary = BoyThemeColors.OnPrimary,
-        onPrimaryContainer = BoyThemeColors.OnPrimaryContainer,
-        secondary = BoyThemeColors.Secondary,
-        secondaryContainer = BoyThemeColors.SecondaryContainer,
-        onSecondary = BoyThemeColors.OnSecondary,
-        onSecondaryContainer = BoyThemeColors.OnSecondaryContainer,
-        tertiary = BoyThemeColors.Tertiary,
-        tertiaryContainer = BoyThemeColors.TertiaryContainer,
-        onTertiary = BoyThemeColors.OnTertiary,
-        onTertiaryContainer = BoyThemeColors.OnTertiaryContainer,
-        background = BoyThemeColors.Background,
-        onBackground = OnBackground,
-        surface = BoyThemeColors.Surface,
-        onSurface = OnSurface,
-        surfaceVariant = BoyThemeColors.SurfaceVariant,
-        onSurfaceVariant = OnSurfaceVariant,
-        outline = Outline,
-        outlineVariant = OutlineVariant,
-        error = Error,
-        onError = OnError
-    )
-    
-    AppTheme.NEUTRAL, AppTheme.CUSTOM -> lightColorScheme(
-        primary = NeutralThemeColors.Primary,
-        primaryContainer = NeutralThemeColors.PrimaryContainer,
-        onPrimary = NeutralThemeColors.OnPrimary,
-        onPrimaryContainer = NeutralThemeColors.OnPrimaryContainer,
-        secondary = NeutralThemeColors.Secondary,
-        secondaryContainer = NeutralThemeColors.SecondaryContainer,
-        onSecondary = NeutralThemeColors.OnSecondary,
-        onSecondaryContainer = NeutralThemeColors.OnSecondaryContainer,
-        tertiary = NeutralThemeColors.Tertiary,
-        tertiaryContainer = NeutralThemeColors.TertiaryContainer,
-        onTertiary = NeutralThemeColors.OnTertiary,
-        onTertiaryContainer = NeutralThemeColors.OnTertiaryContainer,
-        background = NeutralThemeColors.Background,
-        onBackground = OnBackground,
-        surface = NeutralThemeColors.Surface,
-        onSurface = OnSurface,
-        surfaceVariant = NeutralThemeColors.SurfaceVariant,
-        onSurfaceVariant = OnSurfaceVariant,
-        outline = Outline,
-        outlineVariant = OutlineVariant,
-        error = Error,
-        onError = OnError
-    )
+    else -> lightColorScheme() // Fallback
 }
+
+/**
+ * Cria o esquema de cores baseado no tema selecionado
+ */
+private fun getColorScheme(appTheme: AppTheme) = lightColorScheme(
+    primary = getPrimary(appTheme),
+    primaryContainer = getPrimaryContainer(appTheme),
+    onPrimary = getOnPrimary(appTheme),
+    onPrimaryContainer = getOnPrimaryContainer(appTheme),
+    secondary = getSecondary(appTheme),
+    secondaryContainer = getSecondaryContainer(appTheme),
+    onSecondary = getOnSecondary(appTheme),
+    onSecondaryContainer = getOnSecondaryContainer(appTheme),
+    tertiary = getTertiary(appTheme),
+    tertiaryContainer = getTertiaryContainer(appTheme),
+    onTertiary = getOnTertiary(appTheme),
+    onTertiaryContainer = getOnTertiaryContainer(appTheme),
+    background = getBackground(appTheme),
+    onBackground = OnBackground,
+    surface = getSurface(appTheme),
+    onSurface = OnSurface,
+    surfaceVariant = getSurfaceVariant(appTheme),
+    onSurfaceVariant = OnSurfaceVariant,
+    outline = Outline,
+    outlineVariant = OutlineVariant,
+    error = Error,
+    onError = OnError
+)
 
 @Composable
 fun ChecklistGestantesTheme(
@@ -102,11 +81,7 @@ fun ChecklistGestantesTheme(
     val view = LocalView.current
     
     // Cor da status bar baseada no tema
-    val statusBarColor = when(appTheme) {
-        AppTheme.GIRL -> GirlThemeColors.Primary
-        AppTheme.BOY -> BoyThemeColors.Primary
-        AppTheme.NEUTRAL, AppTheme.CUSTOM -> NeutralThemeColors.Primary
-    }
+    val statusBarColor = getPrimary(appTheme)
     
     if (!view.isInEditMode) {
         SideEffect {

@@ -30,6 +30,18 @@ import com.gestantes.checklist.ui.subscription.SubscriptionScreen
 import com.gestantes.checklist.ui.weekly.WeeklyChecklistScreen
 import com.gestantes.checklist.ui.timeline.TimelineScreen
 import com.gestantes.checklist.ui.content.PregnancyContentScreen
+import com.gestantes.checklist.ui.belly.BellyGalleryScreen
+import com.gestantes.checklist.ui.letter.BabyLetterScreen
+import com.gestantes.checklist.ui.shower.BabyShowerScreen
+import com.gestantes.checklist.ui.contraction.ContractionScreen
+import com.gestantes.checklist.ui.reminder.ReminderScreen
+import com.gestantes.checklist.ui.notification.NotificationSettingsScreen
+import com.gestantes.checklist.ui.adoption.AdoptionScreen
+import com.gestantes.checklist.ui.tools.DueDateCalculatorScreen
+import com.gestantes.checklist.ui.tools.KickCounterScreen
+import com.gestantes.checklist.ui.tools.BabySizeScreen
+import com.gestantes.checklist.ui.tools.BabyNamesScreen
+import com.gestantes.checklist.ui.tools.BirthPlanScreen
 
 sealed class Screen(val route: String) {
     data object Onboarding : Screen("onboarding")
@@ -54,6 +66,26 @@ sealed class Screen(val route: String) {
     data object WeeklyChecklist : Screen("weekly_checklist")
     data object Timeline : Screen("timeline")
     data object PregnancyContent : Screen("pregnancy_content")
+    
+    // NOVAS TELAS - Expansão v2.0
+    data object BellyGallery : Screen("belly_gallery")
+    data object BabyLetter : Screen("baby_letter")
+    data object BabyShower : Screen("baby_shower")
+    data object Contraction : Screen("contraction")
+    data object Reminder : Screen("reminder")
+    
+    // Configurações de Notificação
+    data object NotificationSettings : Screen("notification_settings")
+    
+    // Apoio à Adoção
+    data object Adoption : Screen("adoption")
+    
+    // Ferramentas Essenciais
+    data object DueDateCalculator : Screen("due_date_calculator")
+    data object KickCounter : Screen("kick_counter")
+    data object BabySize : Screen("baby_size")
+    data object BabyNames : Screen("baby_names")
+    data object BirthPlan : Screen("birth_plan")
 }
 
 @Composable
@@ -142,6 +174,44 @@ fun AppNavigation(navController: NavHostController) {
                 },
                 onPregnancyContentClick = {
                     navController.navigate(Screen.PregnancyContent.route)
+                },
+                // NOVOS CALLBACKS - Expansão v2.0
+                onBellyGalleryClick = {
+                    navController.navigate(Screen.BellyGallery.route)
+                },
+                onBabyLetterClick = {
+                    navController.navigate(Screen.BabyLetter.route)
+                },
+                onBabyShowerClick = {
+                    navController.navigate(Screen.BabyShower.route)
+                },
+                onContractionClick = {
+                    navController.navigate(Screen.Contraction.route)
+                },
+                onReminderClick = {
+                    navController.navigate(Screen.Reminder.route)
+                },
+                onNotificationSettingsClick = {
+                    navController.navigate(Screen.NotificationSettings.route)
+                },
+                onAdoptionClick = {
+                    navController.navigate(Screen.Adoption.route)
+                },
+                // Ferramentas Essenciais
+                onDueDateCalculatorClick = {
+                    navController.navigate(Screen.DueDateCalculator.route)
+                },
+                onKickCounterClick = {
+                    navController.navigate(Screen.KickCounter.route)
+                },
+                onBabySizeClick = {
+                    navController.navigate(Screen.BabySize.route)
+                },
+                onBabyNamesClick = {
+                    navController.navigate(Screen.BabyNames.route)
+                },
+                onBirthPlanClick = {
+                    navController.navigate(Screen.BirthPlan.route)
                 }
             )
         }
@@ -248,6 +318,87 @@ fun AppNavigation(navController: NavHostController) {
             PregnancyContentScreen(
                 onBackClick = { navController.popBackStack() },
                 currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+            )
+        }
+        
+        // ============ NOVAS ROTAS - Expansão v2.0 ============
+        
+        composable(Screen.BellyGallery.route) {
+            BellyGalleryScreen(
+                onBackClick = { navController.popBackStack() },
+                currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+            )
+        }
+        
+        composable(Screen.BabyLetter.route) {
+            BabyLetterScreen(
+                onBackClick = { navController.popBackStack() },
+                currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+            )
+        }
+        
+        composable(Screen.BabyShower.route) {
+            BabyShowerScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Contraction.route) {
+            ContractionScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Reminder.route) {
+            ReminderScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        // Configurações de Notificação
+        composable(Screen.NotificationSettings.route) {
+            NotificationSettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        // Apoio à Adoção
+        composable(Screen.Adoption.route) {
+            AdoptionScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        // ============ FERRAMENTAS ESSENCIAIS ============
+        
+        composable(Screen.DueDateCalculator.route) {
+            DueDateCalculatorScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.KickCounter.route) {
+            KickCounterScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.BabySize.route) {
+            BabySizeScreen(
+                onBackClick = { navController.popBackStack() },
+                currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+            )
+        }
+        
+        composable(Screen.BabyNames.route) {
+            BabyNamesScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.BirthPlan.route) {
+            BirthPlanScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

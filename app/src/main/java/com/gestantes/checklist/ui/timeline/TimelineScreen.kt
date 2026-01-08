@@ -29,6 +29,7 @@ import com.gestantes.checklist.data.preferences.UserPreferencesManager
 import com.gestantes.checklist.data.preferences.UserData
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.foundation.layout.statusBarsPadding
 
 /**
  * Tela de Linha do Tempo da Gestação
@@ -118,7 +119,11 @@ private fun TimelineHeader(
         color = Color(0xFFE91E63),
         shadowElevation = 4.dp
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -256,7 +261,7 @@ private fun CurrentWeekCard(currentWeek: Int) {
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = progress,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(10.dp)

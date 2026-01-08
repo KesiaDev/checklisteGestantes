@@ -55,23 +55,8 @@ fun OnboardingScreen(
     var selectedTheme by remember { mutableStateOf(AppTheme.GIRL) }
     var showThemeSelector by remember { mutableStateOf(false) }
     
-    // Determina o tema baseado nos bebês
-    val autoTheme = remember(babies) {
-        preferencesManager.determineThemeFromBabies(babies)
-    }
-    
-    // Se tem menino e menina, mostra seletor de tema
-    val hasMixedGenders = remember(babies) {
-        babies.any { it.gender == BabyGender.GIRL } && 
-        babies.any { it.gender == BabyGender.BOY }
-    }
-    
-    // Atualiza o tema automaticamente baseado nos bebês
-    LaunchedEffect(autoTheme, hasMixedGenders) {
-        if (!hasMixedGenders) {
-            selectedTheme = autoTheme
-        }
-    }
+    // NOTA: Gênero do bebê NÃO define mais a cor do app!
+    // O usuário escolhe livremente a paleta de cores que quiser.
     
     // Cores baseadas no tema selecionado
     val primaryColor = getPrimary(selectedTheme)
@@ -94,13 +79,14 @@ fun OnboardingScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header
             item {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 Box(
                     modifier = Modifier
@@ -281,9 +267,11 @@ fun OnboardingScreen(
                 }
             }
             
-            // Step 3: Theme selector (only if mixed genders)
-            if (hasMixedGenders) {
+            // Step 3: Seletor de cores - SEMPRE disponível!
+            // Escolha livre de cores, sem associação a gênero
+            if (true) { // Sempre mostra o seletor de cores
                 item {
+                    // ====== SELETOR DE CORES MODERNO - SEM ASSOCIAÇÃO A GÊNERO ======
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -314,12 +302,12 @@ fun OnboardingScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
-                                        text = "Escolha as cores do app",
+                                        text = "Escolha suas cores favoritas 🎨",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = "Você tem menino e menina! 💙💖",
+                                        text = "Personalize do seu jeito!",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = OnSurfaceVariant
                                     )
@@ -328,45 +316,123 @@ fun OnboardingScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // Theme options
+                            // Primeira linha de opções
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 ThemeOption(
-                                    name = "Menina",
-                                    emoji = "👧",
-                                    colors = listOf(
-                                        GirlThemeColors.Primary,
-                                        GirlThemeColors.Secondary
-                                    ),
+                                    name = AppTheme.GIRL.displayName,
+                                    emoji = AppTheme.GIRL.emoji,
+                                    colors = listOf(GirlThemeColors.Primary, GirlThemeColors.Secondary),
                                     isSelected = selectedTheme == AppTheme.GIRL,
                                     onClick = { selectedTheme = AppTheme.GIRL },
                                     modifier = Modifier.weight(1f)
                                 )
                                 
                                 ThemeOption(
-                                    name = "Menino",
-                                    emoji = "👦",
-                                    colors = listOf(
-                                        BoyThemeColors.Primary,
-                                        BoyThemeColors.Secondary
-                                    ),
+                                    name = AppTheme.BOY.displayName,
+                                    emoji = AppTheme.BOY.emoji,
+                                    colors = listOf(BoyThemeColors.Primary, BoyThemeColors.Secondary),
                                     isSelected = selectedTheme == AppTheme.BOY,
                                     onClick = { selectedTheme = AppTheme.BOY },
                                     modifier = Modifier.weight(1f)
                                 )
                                 
                                 ThemeOption(
-                                    name = "Neutro",
-                                    emoji = "🌈",
-                                    colors = listOf(
-                                        NeutralThemeColors.Primary,
-                                        NeutralThemeColors.Secondary
-                                    ),
+                                    name = AppTheme.NEUTRAL.displayName,
+                                    emoji = AppTheme.NEUTRAL.emoji,
+                                    colors = listOf(NeutralThemeColors.Primary, NeutralThemeColors.Secondary),
                                     isSelected = selectedTheme == AppTheme.NEUTRAL,
                                     onClick = { selectedTheme = AppTheme.NEUTRAL },
                                     modifier = Modifier.weight(1f)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Segunda linha de opções
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ThemeOption(
+                                    name = AppTheme.LAVENDER.displayName,
+                                    emoji = AppTheme.LAVENDER.emoji,
+                                    colors = listOf(LavenderThemeColors.Primary, LavenderThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.LAVENDER,
+                                    onClick = { selectedTheme = AppTheme.LAVENDER },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                ThemeOption(
+                                    name = AppTheme.CORAL.displayName,
+                                    emoji = AppTheme.CORAL.emoji,
+                                    colors = listOf(CoralThemeColors.Primary, CoralThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.CORAL,
+                                    onClick = { selectedTheme = AppTheme.CORAL },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                ThemeOption(
+                                    name = AppTheme.MINT.displayName,
+                                    emoji = AppTheme.MINT.emoji,
+                                    colors = listOf(MintThemeColors.Primary, MintThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.MINT,
+                                    onClick = { selectedTheme = AppTheme.MINT },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Terceira linha de opções
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ThemeOption(
+                                    name = AppTheme.PEACH.displayName,
+                                    emoji = AppTheme.PEACH.emoji,
+                                    colors = listOf(PeachThemeColors.Primary, PeachThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.PEACH,
+                                    onClick = { selectedTheme = AppTheme.PEACH },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                ThemeOption(
+                                    name = AppTheme.OCEAN.displayName,
+                                    emoji = AppTheme.OCEAN.emoji,
+                                    colors = listOf(OceanThemeColors.Primary, OceanThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.OCEAN,
+                                    onClick = { selectedTheme = AppTheme.OCEAN },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                ThemeOption(
+                                    name = AppTheme.SUNSET.displayName,
+                                    emoji = AppTheme.SUNSET.emoji,
+                                    colors = listOf(SunsetThemeColors.Primary, SunsetThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.SUNSET,
+                                    onClick = { selectedTheme = AppTheme.SUNSET },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Quarta linha - última opção centralizada
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ThemeOption(
+                                    name = AppTheme.FOREST.displayName,
+                                    emoji = AppTheme.FOREST.emoji,
+                                    colors = listOf(ForestThemeColors.Primary, ForestThemeColors.Secondary),
+                                    isSelected = selectedTheme == AppTheme.FOREST,
+                                    onClick = { selectedTheme = AppTheme.FOREST },
+                                    modifier = Modifier.width(120.dp)
                                 )
                             }
                         }

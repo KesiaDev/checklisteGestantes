@@ -50,6 +50,48 @@ class Converters {
     
     @TypeConverter
     fun toAgeGroup(value: String): AgeGroup = AgeGroup.valueOf(value)
+    
+    // ============ LETTER MOOD ============
+    @TypeConverter
+    fun fromLetterMood(mood: LetterMood): String = mood.name
+    
+    @TypeConverter
+    fun toLetterMood(value: String): LetterMood = LetterMood.valueOf(value)
+    
+    // ============ SHOWER CATEGORY ============
+    @TypeConverter
+    fun fromShowerCategory(category: ShowerCategory): String = category.name
+    
+    @TypeConverter
+    fun toShowerCategory(value: String): ShowerCategory = ShowerCategory.valueOf(value)
+    
+    // ============ ITEM PRIORITY ============
+    @TypeConverter
+    fun fromItemPriority(priority: ItemPriority): String = priority.name
+    
+    @TypeConverter
+    fun toItemPriority(value: String): ItemPriority = ItemPriority.valueOf(value)
+    
+    // ============ CONTRACTION INTENSITY ============
+    @TypeConverter
+    fun fromContractionIntensity(intensity: ContractionIntensity): String = intensity.name
+    
+    @TypeConverter
+    fun toContractionIntensity(value: String): ContractionIntensity = ContractionIntensity.valueOf(value)
+    
+    // ============ REMINDER TYPE ============
+    @TypeConverter
+    fun fromReminderType(type: ReminderType): String = type.name
+    
+    @TypeConverter
+    fun toReminderType(value: String): ReminderType = ReminderType.valueOf(value)
+    
+    // ============ REPEAT TYPE ============
+    @TypeConverter
+    fun fromRepeatType(type: RepeatType): String = type.name
+    
+    @TypeConverter
+    fun toRepeatType(value: String): RepeatType = RepeatType.valueOf(value)
 }
 
 

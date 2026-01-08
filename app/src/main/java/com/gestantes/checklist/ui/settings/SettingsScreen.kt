@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gestantes.checklist.data.preferences.AppTheme
+import com.gestantes.checklist.data.preferences.CompanionSupportType
 import com.gestantes.checklist.data.preferences.UserData
 import com.gestantes.checklist.data.preferences.UserPreferencesManager
 import com.gestantes.checklist.ui.theme.*
@@ -220,13 +222,14 @@ fun SettingsScreen(
         )
     }
     
-    // Dialog para pessoa acompanhante (NOVO - ADITIVO)
+    // Dialog para pessoa acompanhante (EXPANDIDO - ADITIVO)
     if (showCompanionDialog) {
         CompanionDialog(
             currentName = userData.companionName,
-            onSave = { name ->
+            currentSupportTypes = userData.companionSupportTypes,
+            onSave = { name, supportTypes ->
                 scope.launch {
-                    preferencesManager.saveCompanionName(name)
+                    preferencesManager.saveCompanionData(name, supportTypes)
                 }
                 showCompanionDialog = false
             },
@@ -312,7 +315,15 @@ private fun ThemeColorPreview(theme: AppTheme) {
     val colors = when(theme) {
         AppTheme.GIRL -> listOf(GirlThemeColors.Primary, GirlThemeColors.Secondary)
         AppTheme.BOY -> listOf(BoyThemeColors.Primary, BoyThemeColors.Secondary)
-        AppTheme.NEUTRAL, AppTheme.CUSTOM -> listOf(NeutralThemeColors.Primary, NeutralThemeColors.Secondary)
+        AppTheme.NEUTRAL -> listOf(NeutralThemeColors.Primary, NeutralThemeColors.Secondary)
+        AppTheme.LAVENDER -> listOf(LavenderThemeColors.Primary, LavenderThemeColors.Secondary)
+        AppTheme.CORAL -> listOf(CoralThemeColors.Primary, CoralThemeColors.Secondary)
+        AppTheme.MINT -> listOf(MintThemeColors.Primary, MintThemeColors.Secondary)
+        AppTheme.PEACH -> listOf(PeachThemeColors.Primary, PeachThemeColors.Secondary)
+        AppTheme.OCEAN -> listOf(OceanThemeColors.Primary, OceanThemeColors.Secondary)
+        AppTheme.SUNSET -> listOf(SunsetThemeColors.Primary, SunsetThemeColors.Secondary)
+        AppTheme.FOREST -> listOf(ForestThemeColors.Primary, ForestThemeColors.Secondary)
+        AppTheme.CUSTOM -> listOf(NeutralThemeColors.Primary, NeutralThemeColors.Secondary)
     }
     
     colors.forEach { color ->
@@ -325,51 +336,61 @@ private fun ThemeColorPreview(theme: AppTheme) {
     }
 }
 
+/**
+ * Diálogo MODERNO de seleção de cores - SEM associação a gênero!
+ * Escolha a paleta que mais combina com VOCÊ 🎨
+ */
 @Composable
 private fun ThemeSelectionDialog(
     currentTheme: AppTheme,
     onThemeSelected: (AppTheme) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // Lista de todas as paletas disponíveis (exceto CUSTOM por enquanto)
+    val themes = listOf(
+        Triple(AppTheme.GIRL, listOf(GirlThemeColors.Primary, GirlThemeColors.Secondary), "Rosa e verde suave"),
+        Triple(AppTheme.BOY, listOf(BoyThemeColors.Primary, BoyThemeColors.Secondary), "Azul e verde calmo"),
+        Triple(AppTheme.NEUTRAL, listOf(NeutralThemeColors.Primary, NeutralThemeColors.Secondary), "Verde e amarelo"),
+        Triple(AppTheme.LAVENDER, listOf(LavenderThemeColors.Primary, LavenderThemeColors.Secondary), "Roxo elegante"),
+        Triple(AppTheme.CORAL, listOf(CoralThemeColors.Primary, CoralThemeColors.Secondary), "Coral vibrante"),
+        Triple(AppTheme.MINT, listOf(MintThemeColors.Primary, MintThemeColors.Secondary), "Menta refrescante"),
+        Triple(AppTheme.PEACH, listOf(PeachThemeColors.Primary, PeachThemeColors.Secondary), "Pêssego aconchegante"),
+        Triple(AppTheme.OCEAN, listOf(OceanThemeColors.Primary, OceanThemeColors.Secondary), "Azul profundo"),
+        Triple(AppTheme.SUNSET, listOf(SunsetThemeColors.Primary, SunsetThemeColors.Secondary), "Laranja dramático"),
+        Triple(AppTheme.FOREST, listOf(ForestThemeColors.Primary, ForestThemeColors.Secondary), "Verde terroso")
+    )
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                text = "Escolha o Tema 🎨",
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    text = "Escolha suas Cores 🎨",
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Personalize do seu jeito!",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                ThemeOptionItem(
-                    theme = AppTheme.GIRL,
-                    name = "Menina",
-                    emoji = "👧",
-                    description = "Rosa e verde claro",
-                    colors = listOf(GirlThemeColors.Primary, GirlThemeColors.Secondary),
-                    isSelected = currentTheme == AppTheme.GIRL,
-                    onClick = { onThemeSelected(AppTheme.GIRL) }
-                )
-                
-                ThemeOptionItem(
-                    theme = AppTheme.BOY,
-                    name = "Menino",
-                    emoji = "👦",
-                    description = "Azul e verde",
-                    colors = listOf(BoyThemeColors.Primary, BoyThemeColors.Secondary),
-                    isSelected = currentTheme == AppTheme.BOY,
-                    onClick = { onThemeSelected(AppTheme.BOY) }
-                )
-                
-                ThemeOptionItem(
-                    theme = AppTheme.NEUTRAL,
-                    name = "Neutro",
-                    emoji = "🌈",
-                    description = "Verde e amarelo",
-                    colors = listOf(NeutralThemeColors.Primary, NeutralThemeColors.Secondary),
-                    isSelected = currentTheme == AppTheme.NEUTRAL,
-                    onClick = { onThemeSelected(AppTheme.NEUTRAL) }
-                )
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.height(400.dp)
+            ) {
+                items(themes) { (theme, colors, description) ->
+                    ThemeOptionItem(
+                        theme = theme,
+                        name = theme.displayName,
+                        emoji = theme.emoji,
+                        description = description,
+                        colors = colors,
+                        isSelected = currentTheme == theme,
+                        onClick = { onThemeSelected(theme) }
+                    )
+                }
             }
         },
         confirmButton = {
@@ -459,26 +480,23 @@ private fun ThemeOptionItem(
     }
 }
 
-private fun getThemeDisplayName(theme: AppTheme): String = when(theme) {
-    AppTheme.GIRL -> "Menina (Rosa)"
-    AppTheme.BOY -> "Menino (Azul)"
-    AppTheme.NEUTRAL -> "Neutro (Verde)"
-    AppTheme.CUSTOM -> "Personalizado"
-}
+private fun getThemeDisplayName(theme: AppTheme): String = theme.displayName
 
 // ============ NOVOS DIALOGS - Inclusão Familiar (ADITIVOS) ============
 
 /**
- * Dialog para informar pessoa acompanhante
- * Campo opcional - pode ser parceiro(a), familiar ou amigo(a)
+ * Dialog EXPANDIDO para informar pessoa acompanhante
+ * ADITIVO - Mantém funcionalidade existente + adiciona tipos de apoio
  */
 @Composable
 private fun CompanionDialog(
     currentName: String,
-    onSave: (String) -> Unit,
+    currentSupportTypes: Set<CompanionSupportType> = emptySet(),
+    onSave: (String, Set<CompanionSupportType>) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf(currentName) }
+    var supportTypes by remember { mutableStateOf(currentSupportTypes) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -506,8 +524,64 @@ private fun CompanionDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
                 
+                // EXPANSÃO: Tipos de apoio (opcional)
+                if (name.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Como essa pessoa te acompanha? (opcional)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    
+                    CompanionSupportType.values().forEach { type ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    supportTypes = if (type in supportTypes) {
+                                        supportTypes - type
+                                    } else {
+                                        supportTypes + type
+                                    }
+                                }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = type in supportTypes,
+                                onCheckedChange = { checked ->
+                                    supportTypes = if (checked) {
+                                        supportTypes + type
+                                    } else {
+                                        supportTypes - type
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = type.emoji, fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = type.displayName,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                Text(
+                                    text = type.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
                 Text(
-                    text = "💡 Este campo é opcional e privado. Serve para personalizar sua experiência.",
+                    text = "💡 Tudo é opcional e privado. Serve para personalizar sua experiência no app.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -515,7 +589,7 @@ private fun CompanionDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onSave(name) },
+                onClick = { onSave(name, supportTypes) },
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Salvar")

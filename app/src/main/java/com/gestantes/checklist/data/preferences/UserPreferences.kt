@@ -25,13 +25,56 @@ enum class BabyGender(val displayName: String, val emoji: String) {
 }
 
 /**
- * Tema de cores do app
+ * Tema de cores do app - MODERNO E INCLUSIVO
+ * As cores NÃO estão associadas a gênero - você escolhe o que mais gosta!
  */
-enum class AppTheme(val displayName: String) {
-    GIRL("Tema Menina (Rosa)"),      // Rosa e verde claro
-    BOY("Tema Menino (Azul)"),       // Azul e verde
-    NEUTRAL("Tema Neutro (Verde)"),  // Verde e amarelo
-    CUSTOM("Personalizado")           // Deixa o usuário escolher
+enum class AppTheme(val displayName: String, val emoji: String) {
+    // Cores clássicas renomeadas de forma neutra
+    GIRL("Rosa Suave", "🌸"),           // Rosa e verde (mantido para compatibilidade)
+    BOY("Azul Sereno", "💙"),           // Azul e verde (mantido para compatibilidade)
+    NEUTRAL("Verde Natureza", "🌿"),    // Verde e amarelo (mantido para compatibilidade)
+    
+    // NOVAS paletas modernas
+    LAVENDER("Lavanda", "💜"),          // Roxo/Lavanda suave
+    CORAL("Coral Sunset", "🧡"),        // Coral/Pêssego
+    MINT("Menta Fresh", "🍃"),          // Menta/Turquesa
+    PEACH("Pêssego Bloom", "🍑"),       // Pêssego/Rosa quente
+    OCEAN("Oceano", "🌊"),              // Azul oceano profundo
+    SUNSET("Pôr do Sol", "🌅"),         // Laranja/Rosa gradiente
+    FOREST("Floresta", "🌲"),           // Verde escuro/Musgo
+    
+    CUSTOM("Personalizado", "🎨")       // Deixa o usuário escolher
+}
+
+// ============ EXPANSÃO DA PESSOA ACOMPANHANTE (ADITIVO) ============
+
+/**
+ * Tipos de apoio que a pessoa acompanhante oferece
+ * ADITIVO - Apenas para personalização de textos
+ */
+enum class CompanionSupportType(val displayName: String, val emoji: String, val description: String) {
+    EMOTIONAL("Apoio emocional", "💗", "Oferece carinho, escuta e suporte emocional"),
+    PLANNING("Organização e planejamento", "📋", "Ajuda a organizar e planejar a chegada do bebê"),
+    APPOINTMENTS("Presença em consultas", "🏥", "Acompanha nas consultas e exames"),
+    POSTPARTUM("Apoio no pós-parto", "🤱", "Estará presente no pós-parto")
+}
+
+/**
+ * Dados expandidos da pessoa acompanhante (ADITIVO)
+ * Tudo é OPCIONAL e serve apenas para personalização
+ */
+data class CompanionData(
+    val name: String = "",
+    val supportTypes: Set<CompanionSupportType> = emptySet()
+) {
+    val hasCompanion: Boolean get() = name.isNotBlank()
+    
+    /**
+     * Retorna o nome do acompanhante ou um texto genérico
+     */
+    fun getDisplayName(fallback: String = "sua rede de apoio"): String {
+        return if (name.isNotBlank()) name else fallback
+    }
 }
 
 /**
@@ -53,11 +96,22 @@ data class UserData(
     val babies: List<Baby> = emptyList(),
     val onboardingCompleted: Boolean = false,
     val appTheme: AppTheme = AppTheme.GIRL, // Tema padrão
-    // Novos campos para inclusão familiar (ADITIVOS)
+    // Campos para inclusão familiar (ADITIVOS)
     val companionName: String = "", // Nome da pessoa acompanhante (opcional)
     val expectedDueDate: String? = null, // Data prevista do parto (formato: "dd/MM/yyyy")
-    val currentWeek: Int = 0 // Semana atual da gestação (calculada ou informada)
-)
+    val currentWeek: Int = 0, // Semana atual da gestação (calculada ou informada)
+    // EXPANSÃO DA PESSOA ACOMPANHANTE (ADITIVO)
+    val companionSupportTypes: Set<CompanionSupportType> = emptySet() // Tipos de apoio (opcional)
+) {
+    /**
+     * Retorna os dados completos do acompanhante
+     * ADITIVO - Conveniência para acessar dados do acompanhante
+     */
+    val companion: CompanionData get() = CompanionData(
+        name = companionName,
+        supportTypes = companionSupportTypes
+    )
+}
 
 /**
  * Gerenciador de preferências do usuário usando DataStore
@@ -71,10 +125,12 @@ class UserPreferencesManager(private val context: Context) {
         private val BABIES_JSON_KEY = stringPreferencesKey("babies_json")
         private val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
         private val APP_THEME_KEY = stringPreferencesKey("app_theme")
-        // Novas chaves para inclusão familiar (ADITIVAS)
+        // Chaves para inclusão familiar (ADITIVAS)
         private val COMPANION_NAME_KEY = stringPreferencesKey("companion_name")
         private val EXPECTED_DUE_DATE_KEY = stringPreferencesKey("expected_due_date")
         private val CURRENT_WEEK_KEY = stringPreferencesKey("current_week")
+        // EXPANSÃO DA PESSOA ACOMPANHANTE (ADITIVA)
+        private val COMPANION_SUPPORT_TYPES_KEY = stringPreferencesKey("companion_support_types")
     }
     
     /**
@@ -85,10 +141,12 @@ class UserPreferencesManager(private val context: Context) {
         val babiesJson = preferences[BABIES_JSON_KEY] ?: "[]"
         val onboardingCompleted = preferences[ONBOARDING_COMPLETED_KEY] ?: false
         val themeStr = preferences[APP_THEME_KEY] ?: AppTheme.GIRL.name
-        // Novos campos para inclusão familiar
+        // Campos para inclusão familiar
         val companionName = preferences[COMPANION_NAME_KEY] ?: ""
         val expectedDueDate = preferences[EXPECTED_DUE_DATE_KEY]
         val currentWeekStr = preferences[CURRENT_WEEK_KEY] ?: "0"
+        // EXPANSÃO: tipos de suporte do acompanhante
+        val companionSupportTypesStr = preferences[COMPANION_SUPPORT_TYPES_KEY] ?: ""
         
         val babies: List<Baby> = try {
             val type = object : TypeToken<List<Baby>>() {}.type
@@ -109,6 +167,22 @@ class UserPreferencesManager(private val context: Context) {
             0
         }
         
+        // EXPANSÃO: parse dos tipos de suporte
+        val companionSupportTypes = try {
+            if (companionSupportTypesStr.isBlank()) {
+                emptySet()
+            } else {
+                companionSupportTypesStr.split(",")
+                    .mapNotNull { name -> 
+                        try { CompanionSupportType.valueOf(name.trim()) } 
+                        catch (e: Exception) { null }
+                    }
+                    .toSet()
+            }
+        } catch (e: Exception) {
+            emptySet()
+        }
+        
         UserData(
             momName = momName,
             babies = babies,
@@ -116,7 +190,8 @@ class UserPreferencesManager(private val context: Context) {
             appTheme = appTheme,
             companionName = companionName,
             expectedDueDate = expectedDueDate,
-            currentWeek = currentWeek
+            currentWeek = currentWeek,
+            companionSupportTypes = companionSupportTypes
         )
     }
     
@@ -203,20 +278,14 @@ class UserPreferencesManager(private val context: Context) {
     }
     
     /**
-     * Determina o tema baseado nos bebês cadastrados
+     * NOTA: Esta função foi mantida apenas para compatibilidade.
+     * No novo sistema, o gênero do bebê NÃO define a cor do app.
+     * O usuário escolhe livremente a paleta de cores que mais gostar!
      */
+    @Deprecated("Use a paleta de cores escolhida pelo usuário diretamente")
     fun determineThemeFromBabies(babies: List<Baby>): AppTheme {
-        if (babies.isEmpty()) return AppTheme.GIRL
-        
-        val hasGirl = babies.any { it.gender == BabyGender.GIRL }
-        val hasBoy = babies.any { it.gender == BabyGender.BOY }
-        
-        return when {
-            hasGirl && hasBoy -> AppTheme.NEUTRAL // Tem menino e menina
-            hasBoy -> AppTheme.BOY                 // Só menino(s)
-            hasGirl -> AppTheme.GIRL               // Só menina(s)
-            else -> AppTheme.GIRL                  // Padrão ou não sabe
-        }
+        // Retorna o tema padrão - o usuário escolhe a cor que quiser
+        return AppTheme.GIRL // Rosa Suave como padrão inicial
     }
     
     /**
@@ -277,6 +346,29 @@ class UserPreferencesManager(private val context: Context) {
             }
             preferences[CURRENT_WEEK_KEY] = currentWeek.toString()
             preferences[COMPANION_NAME_KEY] = companionName
+        }
+    }
+    
+    // ============ EXPANSÃO DA PESSOA ACOMPANHANTE (ADITIVO) ============
+    
+    /**
+     * Salva os tipos de apoio que a pessoa acompanhante oferece
+     * ADITIVO - Não altera nenhuma lógica existente
+     */
+    suspend fun saveCompanionSupportTypes(supportTypes: Set<CompanionSupportType>) {
+        context.dataStore.edit { preferences ->
+            preferences[COMPANION_SUPPORT_TYPES_KEY] = supportTypes.joinToString(",") { it.name }
+        }
+    }
+    
+    /**
+     * Salva todos os dados do acompanhante de uma vez
+     * ADITIVO - Conveniência para salvar nome e tipos de apoio juntos
+     */
+    suspend fun saveCompanionData(name: String, supportTypes: Set<CompanionSupportType> = emptySet()) {
+        context.dataStore.edit { preferences ->
+            preferences[COMPANION_NAME_KEY] = name
+            preferences[COMPANION_SUPPORT_TYPES_KEY] = supportTypes.joinToString(",") { it.name }
         }
     }
 }

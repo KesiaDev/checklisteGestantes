@@ -19,9 +19,20 @@ import kotlinx.coroutines.launch
         BabyDocument::class,
         MedicalRecord::class,
         DevelopmentRecord::class,
-        GrowthRecord::class
+        GrowthRecord::class,
+        // Entidades de funcionalidades extras
+        BellyPhoto::class,
+        BabyLetter::class,
+        BabyShowerItem::class,
+        Contraction::class,
+        Reminder::class,
+        // Checklist Semanal da Gestação
+        WeeklyCheckItem::class,
+        // Ferramentas Essenciais
+        BabyName::class,
+        BirthPlanItem::class
     ],
-    version = 2,
+    version = 6, // Adicionado BabyName e BirthPlanItem
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,6 +43,20 @@ abstract class ChecklistDatabase : RoomDatabase() {
     abstract fun documentDao(): DocumentDao
     abstract fun medicalDao(): MedicalDao
     abstract fun growthDao(): GrowthDao
+    
+    // DAOs de funcionalidades extras
+    abstract fun bellyPhotoDao(): BellyPhotoDao
+    abstract fun babyLetterDao(): BabyLetterDao
+    abstract fun babyShowerDao(): BabyShowerDao
+    abstract fun contractionDao(): ContractionDao
+    abstract fun reminderDao(): ReminderDao
+    
+    // DAO do Checklist Semanal
+    abstract fun weeklyCheckDao(): WeeklyCheckDao
+    
+    // DAOs das Ferramentas Essenciais
+    abstract fun babyNameDao(): BabyNameDao
+    abstract fun birthPlanDao(): BirthPlanDao
     
     companion object {
         @Volatile

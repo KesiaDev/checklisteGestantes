@@ -25,9 +25,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gestantes.checklist.data.entity.DiaryEntry
 import com.gestantes.checklist.data.entity.Emotion
+import com.gestantes.checklist.data.preferences.UserData
+import com.gestantes.checklist.data.preferences.UserPreferencesManager
 import com.gestantes.checklist.viewmodel.DiaryViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,6 +46,11 @@ fun DiaryScreen(
     var selectedEntryForEdit by remember { mutableStateOf<DiaryEntry?>(null) }
     var showDetailSheet by remember { mutableStateOf(false) }
     var detailEntry by remember { mutableStateOf<DiaryEntry?>(null) }
+    
+    // EXPANSÃO: Obter dados do acompanhante (ADITIVO)
+    val context = LocalContext.current
+    val preferencesManager = remember { UserPreferencesManager(context) }
+    val userData by preferencesManager.userData.collectAsState(initial = UserData())
     
     Box(
         modifier = Modifier
@@ -110,16 +118,17 @@ fun DiaryScreen(
         }
     }
     
-    // Dialog para adicionar/editar
+    // Dialog para adicionar/editar (EXPANDIDO com momento compartilhado)
     if (showAddDialog) {
         AddDiaryEntryDialog(
             existingEntry = selectedEntryForEdit,
+            companionName = userData.companionName, // EXPANSÃO: passa nome do acompanhante
             onDismiss = { 
                 showAddDialog = false
                 selectedEntryForEdit = null
             },
-            onSave = { title, content, emotion ->
-                viewModel.saveEntry(title, content, emotion, selectedEntryForEdit)
+            onSave = { title, content, emotion, involvesCompanion ->
+                viewModel.saveEntry(title, content, emotion, selectedEntryForEdit, involvesCompanion)
                 showAddDialog = false
                 selectedEntryForEdit = null
             }
@@ -152,7 +161,11 @@ private fun DiaryHeader(
         color = Color.White,
         shadowElevation = 4.dp
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -360,46 +373,84 @@ private fun DiaryEntryCard(
                 overflow = TextOverflow.Ellipsis
             )
             
-            // Indicador de resposta da IA
-            if (entry.aiResponse != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(
-                            Color(0xFFE91E63).copy(alpha = 0.1f),
-                            RoundedCornerShape(8.dp)
+            // Badges de status
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // EXPANSÃO: Badge de momento compartilhado (ADITIVO)
+                if (entry.involvesCompanion) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(
+                                Color(0xFF9C27B0).copy(alpha = 0.1f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "💕",
+                            fontSize = 12.sp
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.AutoAwesome,
-                        contentDescription = null,
-                        tint = Color(0xFFE91E63),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Mensagem de apoio disponível",
-                        fontSize = 11.sp,
-                        color = Color(0xFFE91E63)
-                    )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Momento compartilhado",
+                            fontSize = 11.sp,
+                            color = Color(0xFF9C27B0)
+                        )
+                    }
+                }
+                
+                // Indicador de resposta da IA
+                if (entry.aiResponse != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(
+                                Color(0xFFE91E63).copy(alpha = 0.1f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            tint = Color(0xFFE91E63),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Mensagem de apoio",
+                            fontSize = 11.sp,
+                            color = Color(0xFFE91E63)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+/**
+ * Dialog EXPANDIDO para adicionar/editar entrada do diário
+ * ADITIVO - Inclui toggle para momento compartilhado com acompanhante
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddDiaryEntryDialog(
     existingEntry: DiaryEntry?,
+    companionName: String = "",
     onDismiss: () -> Unit,
-    onSave: (String, String, Emotion) -> Unit
+    onSave: (String, String, Emotion, Boolean) -> Unit
 ) {
     var title by remember { mutableStateOf(existingEntry?.title ?: "") }
     var content by remember { mutableStateOf(existingEntry?.content ?: "") }
     var selectedEmotion by remember { mutableStateOf(existingEntry?.emotion ?: Emotion.CALM) }
+    // EXPANSÃO: toggle para momento compartilhado
+    var involvesCompanion by remember { mutableStateOf(existingEntry?.involvesCompanion ?: false) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -478,6 +529,46 @@ private fun AddDiaryEntryDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
                 
+                // EXPANSÃO: Toggle para momento compartilhado (ADITIVO)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (involvesCompanion) Color(0xFFE91E63).copy(alpha = 0.1f)
+                            else Color(0xFFF5F5F5)
+                        )
+                        .clickable { involvesCompanion = !involvesCompanion }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = involvesCompanion,
+                        onCheckedChange = { involvesCompanion = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFFE91E63)
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "💕 Esse momento envolve quem me acompanha",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (involvesCompanion) Color(0xFFE91E63) else Color(0xFF666666)
+                        )
+                        if (involvesCompanion && companionName.isNotBlank()) {
+                            Text(
+                                text = "Esse registro envolve $companionName",
+                                fontSize = 12.sp,
+                                color = Color(0xFFE91E63).copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
+                
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 Row(
@@ -491,7 +582,7 @@ private fun AddDiaryEntryDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     
                     Button(
-                        onClick = { onSave(title, content, selectedEmotion) },
+                        onClick = { onSave(title, content, selectedEmotion, involvesCompanion) },
                         enabled = content.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFE91E63)

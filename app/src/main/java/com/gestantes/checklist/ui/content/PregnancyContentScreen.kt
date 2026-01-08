@@ -114,7 +114,11 @@ private fun ContentHeader(onBackClick: () -> Unit) {
         color = Color(0xFFE91E63),
         shadowElevation = 4.dp
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

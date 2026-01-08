@@ -18,7 +18,10 @@ data class DiaryEntry(
     val updatedAt: Long = System.currentTimeMillis(),
     // Resposta da IA (armazenada para offline)
     val aiResponse: String? = null,
-    val aiAnalyzedAt: Long? = null
+    val aiAnalyzedAt: Long? = null,
+    // EXPANSÃO: Momento compartilhado com acompanhante (ADITIVO)
+    // Campo opcional - não altera lógica existente
+    val involvesCompanion: Boolean = false
 )
 
 /**

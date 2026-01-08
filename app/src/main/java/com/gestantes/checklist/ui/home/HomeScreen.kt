@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -61,7 +63,10 @@ import androidx.compose.ui.unit.sp
 import com.gestantes.checklist.data.entity.ChecklistCategory
 import com.gestantes.checklist.data.preferences.UserData
 import com.gestantes.checklist.data.preferences.UserPreferencesManager
+import com.gestantes.checklist.ai.AICompanion
 import com.gestantes.checklist.notification.ComfortMessages
+import com.gestantes.checklist.ui.components.AIWelcomeBanner
+import com.gestantes.checklist.ui.components.AITipCard
 import com.gestantes.checklist.ui.theme.OnSurfaceVariant
 import com.gestantes.checklist.ui.theme.getCardMaternidade
 import com.gestantes.checklist.ui.theme.getCardPosparto
@@ -89,7 +94,23 @@ fun HomeScreen(
     // NOVOS CALLBACKS - Expansão da Gestação (ADITIVOS)
     onWeeklyChecklistClick: () -> Unit = {},
     onTimelineClick: () -> Unit = {},
-    onPregnancyContentClick: () -> Unit = {}
+    onPregnancyContentClick: () -> Unit = {},
+    // NOVOS CALLBACKS - Expansão v2.0
+    onBellyGalleryClick: () -> Unit = {},
+    onBabyLetterClick: () -> Unit = {},
+    onBabyShowerClick: () -> Unit = {},
+    onContractionClick: () -> Unit = {},
+    onReminderClick: () -> Unit = {},
+    // Configurações de notificação
+    onNotificationSettingsClick: () -> Unit = {},
+    // Apoio à Adoção
+    onAdoptionClick: () -> Unit = {},
+    // Ferramentas Essenciais
+    onDueDateCalculatorClick: () -> Unit = {},
+    onKickCounterClick: () -> Unit = {},
+    onBabySizeClick: () -> Unit = {},
+    onBabyNamesClick: () -> Unit = {},
+    onBirthPlanClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val preferencesManager = remember { UserPreferencesManager(context) }
@@ -109,6 +130,15 @@ fun HomeScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
+                    // Botão de notificações
+                    IconButton(onClick = onNotificationSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = "Notificações",
+                            tint = Color.White
+                        )
+                    }
+                    
                     // Botão de configurações
                     IconButton(onClick = onSettingsClick) {
                         Icon(
@@ -177,8 +207,18 @@ fun HomeScreen(
                 WelcomeCard(userData = userData)
             }
             
+            // ✨ Banner da IA Lumi - Companheira da Gestante
             item {
-                DailyComfortCard(momName = userData.momName)
+                AIWelcomeBanner(
+                    momName = userData.momName,
+                    currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+                )
+            }
+            
+            // Dica contextual da Lumi
+            item {
+                val tip = remember { AICompanion.getTip(AICompanion.Context.HOME, userData.currentWeek.takeIf { it > 0 } ?: 20) }
+                AITipCard(message = tip)
             }
             
             // ============ MINHA GESTAÇÃO (NOVA SEÇÃO - ADITIVA) ============
@@ -224,6 +264,157 @@ fun HomeScreen(
                     color = Color(0xFF009688),
                     onClick = onPregnancyContentClick
                 )
+            }
+            
+            // Galeria de fotos da barriga
+            item {
+                PregnancyFeatureCard(
+                    emoji = "📸",
+                    title = "Galeria da Barriga",
+                    description = "Registre e compare a evolução da sua barriga",
+                    color = Color(0xFFE91E63),
+                    onClick = onBellyGalleryClick
+                )
+            }
+            
+            // Cartas para o bebê
+            item {
+                PregnancyFeatureCard(
+                    emoji = "💌",
+                    title = "Cartas para o Bebê",
+                    description = "Escreva memórias para seu bebê ler quando crescer",
+                    color = Color(0xFFFF8A65),
+                    onClick = onBabyLetterClick
+                )
+            }
+            
+            // ============ FERRAMENTAS ÚTEIS ============
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "🛠️ Ferramentas Úteis",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Lista de chá de bebê
+            item {
+                PregnancyFeatureCard(
+                    emoji = "🎁",
+                    title = "Lista de Chá de Bebê",
+                    description = "Organize e compartilhe sua lista de presentes",
+                    color = Color(0xFF4CAF50),
+                    onClick = onBabyShowerClick
+                )
+            }
+            
+            // Contador de contrações
+            item {
+                PregnancyFeatureCard(
+                    emoji = "⏱️",
+                    title = "Contador de Contrações",
+                    description = "Monitore suas contrações para o trabalho de parto",
+                    color = Color(0xFF2196F3),
+                    onClick = onContractionClick
+                )
+            }
+            
+            // Lembretes
+            item {
+                PregnancyFeatureCard(
+                    emoji = "🔔",
+                    title = "Lembretes",
+                    description = "Consultas, exames e vacinas",
+                    color = Color(0xFF5C6BC0),
+                    onClick = onReminderClick
+                )
+            }
+            
+            // ============ FERRAMENTAS ESSENCIAIS ============
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "🛠️ Ferramentas Essenciais",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Calculadora DPP
+            item {
+                PregnancyFeatureCard(
+                    emoji = "📅",
+                    title = "Calculadora DPP",
+                    description = "Calcule a data prevista do parto",
+                    color = Color(0xFFE91E63),
+                    onClick = onDueDateCalculatorClick
+                )
+            }
+            
+            // Contador de Chutes
+            item {
+                PregnancyFeatureCard(
+                    emoji = "👣",
+                    title = "Contador de Chutes",
+                    description = "Monitore os movimentos do bebê",
+                    color = Color(0xFF2196F3),
+                    onClick = onKickCounterClick
+                )
+            }
+            
+            // Tamanho do Bebê
+            item {
+                PregnancyFeatureCard(
+                    emoji = "🍎",
+                    title = "Tamanho do Bebê",
+                    description = "Compare o tamanho com frutas e objetos",
+                    color = Color(0xFFFF9800),
+                    onClick = onBabySizeClick
+                )
+            }
+            
+            // Lista de Nomes
+            item {
+                PregnancyFeatureCard(
+                    emoji = "📝",
+                    title = "Lista de Nomes",
+                    description = "Organize e avalie nomes para o bebê",
+                    color = Color(0xFF9C27B0),
+                    onClick = onBabyNamesClick
+                )
+            }
+            
+            // Plano de Parto
+            item {
+                PregnancyFeatureCard(
+                    emoji = "📋",
+                    title = "Plano de Parto",
+                    description = "Crie seu plano de parto personalizado",
+                    color = Color(0xFF4CAF50),
+                    onClick = onBirthPlanClick
+                )
+            }
+            
+            // ============ CAMINHOS ESPECIAIS ============
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "💜 Caminhos Especiais",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Apoio à Adoção
+            item {
+                AdoptionCard(onClick = onAdoptionClick)
             }
             
             // ============ ECOSSISTEMA DO BEBÊ ============
@@ -422,6 +613,9 @@ private data class QuickAccessItem(
     val onClick: () -> Unit
 )
 
+/**
+ * Card de acesso rápido MODERNO
+ */
 @Composable
 private fun QuickAccessCard(
     emoji: String,
@@ -430,14 +624,13 @@ private fun QuickAccessCard(
     isPremium: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
-            .width(80.dp)
+            .width(85.dp)
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.15f)
-        ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        shadowElevation = 6.dp
     ) {
         Column(
             modifier = Modifier
@@ -445,30 +638,59 @@ private fun QuickAccessCard(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = emoji,
-                fontSize = 28.sp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                color.copy(alpha = 0.1f),
+                                color.copy(alpha = 0.2f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = 22.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = title,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = color,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF374151),
                 textAlign = TextAlign.Center
             )
             if (!isPremium) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = null,
-                    tint = color.copy(alpha = 0.5f),
-                    modifier = Modifier.size(12.dp)
-                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .size(14.dp)
+                        .background(
+                            color = Color(0xFFF3F4F6),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFFD1D5DB),
+                        modifier = Modifier.size(8.dp)
+                    )
+                }
             }
         }
     }
 }
 
+/**
+ * Card MODERNO do Ecossistema do Bebê (Premium)
+ */
 @Composable
 private fun BabyEcosystemCard(
     emoji: String,
@@ -478,88 +700,144 @@ private fun BabyEcosystemCard(
     isPremium: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.12f)
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 8.dp,
+        tonalElevation = 0.dp
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = emoji,
-                    fontSize = 26.sp
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(14.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White,
+                            color.copy(alpha = 0.05f)
+                        )
                     )
-                    if (!isPremium) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = color,
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Ícone com gradiente moderno
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    color.copy(alpha = 0.15f),
+                                    color.copy(alpha = 0.25f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = emoji,
+                        fontSize = 28.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = title,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1A1A2E)
+                        )
+                        if (!isPremium) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // Badge Premium com gradiente dourado
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color(0xFFFFB800),
+                                                Color(0xFFFFD54F)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Star,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(10.dp)
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
-                                Text(
-                                    text = "PREMIUM",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Star,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(10.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "PRO",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = description,
+                        fontSize = 13.sp,
+                        color = Color(0xFF6B7280),
+                        lineHeight = 18.sp
+                    )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceVariant
-                )
+                
+                if (!isPremium) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = Color(0xFFF3F4F6),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = "Conteúdo Premium",
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
             }
             
-            if (!isPremium) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = "Conteúdo Premium",
-                    tint = color.copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            // Linha decorativa lateral com a cor do card
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(40.dp)
+                    .align(Alignment.CenterStart)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                color,
+                                color.copy(alpha = 0.5f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
+                    )
+            )
         }
     }
 }
@@ -619,8 +897,15 @@ private fun WelcomeCard(userData: UserData) {
     }
 }
 
+/**
+ * Card de mensagem diária EXPANDIDO
+ * ADITIVO - Agora inclui menção ao acompanhante quando existir
+ */
 @Composable
-private fun DailyComfortCard(momName: String) {
+private fun DailyComfortCard(
+    momName: String,
+    companionName: String = "" // EXPANSÃO: nome do acompanhante
+) {
     // Mensagem do dia - consistente durante todo o dia
     val dailyMessage = remember { ComfortMessages.getDailyMessage() }
     val displayName = momName.ifBlank { "mamãe" }
@@ -689,10 +974,17 @@ private fun DailyComfortCard(momName: String) {
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
+                // EXPANSÃO: Mensagem inclusiva com acompanhante
+                val supportMessage = if (companionName.isNotBlank()) {
+                    "Você e $companionName estão construindo algo lindo juntos! 💕"
+                } else {
+                    "$displayName, você e sua rede de apoio estão juntos nessa jornada! 💕"
+                }
+                
                 Text(
-                    text = "$displayName, você receberá uma mensagem de carinho todos os dias às 9h 💕",
+                    text = supportMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceVariant.copy(alpha = 0.7f),
+                    color = OnSurfaceVariant.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -701,6 +993,9 @@ private fun DailyComfortCard(momName: String) {
     }
 }
 
+/**
+ * Card MODERNO para categorias de Checklist
+ */
 @Composable
 private fun CategoryCard(
     title: String,
@@ -710,56 +1005,104 @@ private fun CategoryCard(
     iconColor: Color,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 8.dp,
+        tonalElevation = 0.dp
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White,
+                            iconColor.copy(alpha = 0.08f)
+                        )
+                    )
+                )
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    iconColor.copy(alpha = 0.15f),
+                                    iconColor.copy(alpha = 0.25f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A2E)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = description,
+                        fontSize = 13.sp,
+                        color = Color(0xFF6B7280),
+                        lineHeight = 18.sp
+                    )
+                }
+                
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Color(0xFFD1D5DB),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            // Linha decorativa lateral
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(iconColor.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceVariant
-                )
-            }
+                    .width(4.dp)
+                    .height(40.dp)
+                    .align(Alignment.CenterStart)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                iconColor,
+                                iconColor.copy(alpha = 0.5f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
+                    )
+            )
         }
     }
 }
 
+/**
+ * Card MODERNO para Guias Premium
+ */
 @Composable
 private fun PremiumCategoryCard(
     title: String,
@@ -770,89 +1113,152 @@ private fun PremiumCategoryCard(
     isPremium: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 8.dp,
+        tonalElevation = 0.dp
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(iconColor.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White,
+                            iconColor.copy(alpha = 0.08f)
+                        )
                     )
-                    if (!isPremium) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = Color(0xFFE91E63),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    iconColor.copy(alpha = 0.15f),
+                                    iconColor.copy(alpha = 0.25f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = title,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1A1A2E)
+                        )
+                        if (!isPremium) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // Badge Premium dourado moderno
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color(0xFFFFB800),
+                                                Color(0xFFFFD54F)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Star,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(10.dp)
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
-                                Text(
-                                    text = "PREMIUM",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Star,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(10.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "PRO",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = description,
+                        fontSize = 13.sp,
+                        color = Color(0xFF6B7280),
+                        lineHeight = 18.sp
+                    )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceVariant
-                )
+                
+                if (!isPremium) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = Color(0xFFF3F4F6),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = "Conteúdo Premium",
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = Color(0xFFD1D5DB),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
             
-            if (!isPremium) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = "Conteúdo Premium",
-                    tint = Color(0xFFE91E63).copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            // Linha decorativa lateral
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(40.dp)
+                    .align(Alignment.CenterStart)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                iconColor,
+                                iconColor.copy(alpha = 0.5f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
+                    )
+            )
         }
     }
 }
@@ -873,8 +1279,8 @@ private fun DisclaimerText() {
 // ============ NOVOS COMPONENTES - Expansão da Gestação (ADITIVOS) ============
 
 /**
- * Card para as novas funcionalidades da gestação
- * Não requer Premium - disponível para todas as usuárias
+ * Card MODERNO para as novas funcionalidades da gestação
+ * Design limpo sem bordas, com sombra suave e gradiente
  */
 @Composable
 private fun PregnancyFeatureCard(
@@ -884,65 +1290,224 @@ private fun PregnancyFeatureCard(
     color: Color,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.12f)
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 8.dp,
+        tonalElevation = 0.dp
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White,
+                            color.copy(alpha = 0.05f)
+                        )
+                    )
+                )
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Ícone com gradiente moderno
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    color.copy(alpha = 0.15f),
+                                    color.copy(alpha = 0.25f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = emoji,
+                        fontSize = 28.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A2E)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = description,
+                        fontSize = 13.sp,
+                        color = Color(0xFF6B7280),
+                        lineHeight = 18.sp
+                    )
+                }
+                
+                // Badge moderno com gradiente
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFF10B981),
+                                    Color(0xFF34D399)
+                                )
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "GRÁTIS",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+            
+            // Linha decorativa lateral
             Box(
                 modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
+                    .width(4.dp)
+                    .height(40.dp)
+                    .align(Alignment.CenterStart)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                color,
+                                color.copy(alpha = 0.5f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
+                    )
+            )
+        }
+    }
+}
+
+/**
+ * Card especial para Apoio à Adoção
+ * "Gestação do Coração" - para famílias que escolhem adotar
+ */
+@Composable
+private fun AdoptionCard(
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 8.dp
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFFF3E5F5),
+                            Color(0xFFE1BEE7).copy(alpha = 0.3f)
+                        )
+                    )
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = emoji,
-                    fontSize = 26.sp
+                // Ícone especial com coração
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF9C27B0).copy(alpha = 0.2f),
+                                    Color(0xFF7B1FA2).copy(alpha = 0.3f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "💜",
+                        fontSize = 32.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Gestação do Coração",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF7B1FA2)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Apoio completo para famílias em processo de adoção",
+                        fontSize = 13.sp,
+                        color = Color(0xFF6B7280),
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "✨ Checklists • Dicas • Recursos",
+                            fontSize = 11.sp,
+                            color = Color(0xFF9C27B0),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+                
+                Icon(
+                    Icons.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Color(0xFF9C27B0),
+                    modifier = Modifier.size(24.dp)
                 )
             }
             
-            Spacer(modifier = Modifier.width(14.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceVariant
-                )
-            }
-            
-            // Indicador de "grátis" para mostrar que não precisa de premium
-            Surface(
-                color = Color(0xFF4CAF50).copy(alpha = 0.2f),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = "GRÁTIS",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2E7D32),
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-            }
+            // Linha decorativa lateral roxa
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(50.dp)
+                    .align(Alignment.CenterStart)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF9C27B0),
+                                Color(0xFFE91E63)
+                            )
+                        ),
+                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
+                    )
+            )
         }
     }
 }
