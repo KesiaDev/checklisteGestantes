@@ -217,7 +217,7 @@ private fun WelcomeProgressCard(
                 
                 // Barra de progresso
                 LinearProgressIndicator(
-                    progress = { currentWeek / 40f },
+                    progress = currentWeek / 40f,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
