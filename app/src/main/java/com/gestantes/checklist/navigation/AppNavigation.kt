@@ -176,6 +176,7 @@ fun AppNavigation(navController: NavHostController) {
                 startDestination = startDestination,
                 userData = userData,
                 isPremium = isPremium,
+                subscriptionManager = subscriptionManager,
                 onOpenDrawer = { scope.launch { drawerState.open() } },
                 onNavigate = ::handleNavigation
             )
@@ -186,6 +187,7 @@ fun AppNavigation(navController: NavHostController) {
             startDestination = startDestination,
             userData = userData,
             isPremium = isPremium,
+            subscriptionManager = subscriptionManager,
             onOpenDrawer = { },
             onNavigate = ::handleNavigation
         )
@@ -198,6 +200,7 @@ private fun AppNavigationContent(
     startDestination: String,
     userData: UserData,
     isPremium: Boolean,
+    subscriptionManager: SubscriptionManager,
     onOpenDrawer: () -> Unit,
     onNavigate: (String) -> Unit
 ) {
