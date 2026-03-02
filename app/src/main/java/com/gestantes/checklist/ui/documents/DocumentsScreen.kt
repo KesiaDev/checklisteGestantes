@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gestantes.checklist.data.entity.BabyDocument
 import com.gestantes.checklist.data.entity.DocumentType
 import com.gestantes.checklist.data.entity.FileType
@@ -328,7 +329,13 @@ private fun DocumentCard(
             ) {
                 if (document.fileType == FileType.IMAGE) {
                     AsyncImage(
-                        model = File(document.filePath),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(File(document.filePath))
+                            .crossfade(true)
+                            .size(120)
+                            .memoryCacheKey("doc_thumb_${document.id}")
+                            .diskCacheKey("doc_thumb_${document.id}")
+                            .build(),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -653,7 +660,11 @@ private fun DocumentDetailSheet(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     AsyncImage(
-                        model = File(document.filePath),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(File(document.filePath))
+                            .crossfade(true)
+                            .memoryCacheKey("doc_detail_${document.id}")
+                            .build(),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit

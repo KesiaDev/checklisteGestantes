@@ -698,7 +698,11 @@ private fun ComparePhotoSlot(
         ) {
             if (photo != null) {
                 AsyncImage(
-                    model = photo.photoUri,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(photo.photoUri)
+                        .crossfade(true)
+                        .size(200)
+                        .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
