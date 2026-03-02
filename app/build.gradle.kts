@@ -12,8 +12,8 @@ android {
         applicationId = "com.gestantes.checklist"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "3.0.1"
+        versionCode = 8
+        versionName = "3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
