@@ -12,8 +12,8 @@ android {
         applicationId = "com.gestantes.checklist"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "2.0.1"
+        versionCode = 7
+        versionName = "3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -30,6 +30,12 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+    
+    // Otimizações de performance
+    @Suppress("UnstableApiUsage")
+    androidResources {
+        generateLocaleConfig = false
     }
     
     compileOptions {

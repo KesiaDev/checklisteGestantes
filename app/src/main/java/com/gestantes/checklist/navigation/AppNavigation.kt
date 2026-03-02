@@ -1,20 +1,20 @@
 package com.gestantes.checklist.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.gestantes.checklist.billing.SubscriptionManager
 import com.gestantes.checklist.data.entity.ChecklistCategory
 import com.gestantes.checklist.data.preferences.UserData
 import com.gestantes.checklist.data.preferences.UserPreferencesManager
 import com.gestantes.checklist.ui.checklist.ChecklistScreen
+import com.gestantes.checklist.ui.components.AppDrawer
 import com.gestantes.checklist.ui.diary.DiaryScreen
 import com.gestantes.checklist.ui.documents.DocumentsScreen
 import com.gestantes.checklist.ui.growth.GrowthScreen
@@ -22,9 +22,10 @@ import com.gestantes.checklist.ui.guides.CareGuideScreen
 import com.gestantes.checklist.ui.guides.DevelopmentScreen
 import com.gestantes.checklist.ui.guides.SleepGuideScreen
 import com.gestantes.checklist.ui.history.HistoryScreen
-import com.gestantes.checklist.ui.home.HomeScreen
+import com.gestantes.checklist.ui.home.DashboardScreen
 import com.gestantes.checklist.ui.onboarding.OnboardingScreen
 import com.gestantes.checklist.ui.search.SearchScreen
+import com.gestantes.checklist.ui.sections.*
 import com.gestantes.checklist.ui.settings.SettingsScreen
 import com.gestantes.checklist.ui.subscription.SubscriptionScreen
 import com.gestantes.checklist.ui.weekly.WeeklyChecklistScreen
@@ -42,6 +43,7 @@ import com.gestantes.checklist.ui.tools.KickCounterScreen
 import com.gestantes.checklist.ui.tools.BabySizeScreen
 import com.gestantes.checklist.ui.tools.BabyNamesScreen
 import com.gestantes.checklist.ui.tools.BirthPlanScreen
+import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
     data object Onboarding : Screen("onboarding")
@@ -86,8 +88,17 @@ sealed class Screen(val route: String) {
     data object BabySize : Screen("baby_size")
     data object BabyNames : Screen("baby_names")
     data object BirthPlan : Screen("birth_plan")
+    
+    // NOVAS TELAS DE SEÇÃO (Menu organizado)
+    data object SectionPregnancy : Screen("section_pregnancy")
+    data object SectionTools : Screen("section_tools")
+    data object SectionBaby : Screen("section_baby")
+    data object SectionChecklists : Screen("section_checklists")
+    data object SectionGuides : Screen("section_guides")
+    data object SectionSpecial : Screen("section_special")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val context = LocalContext.current
@@ -97,6 +108,12 @@ fun AppNavigation(navController: NavHostController) {
     // Subscription Manager
     val subscriptionManager = remember { SubscriptionManager.getInstance(context) }
     val isPremium by subscriptionManager.isPremium.collectAsState()
+    
+    // Drawer state
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route ?: ""
     
     // Define a tela inicial baseado no onboarding
     val startDestination = if (userData.onboardingCompleted) {
@@ -114,6 +131,78 @@ fun AppNavigation(navController: NavHostController) {
         }
     }
     
+    // Função de navegação unificada
+    fun handleNavigation(route: String) {
+        when {
+            // Rotas que precisam de premium
+            route in listOf("diary", "documents", "history", "growth", "search", 
+                           "sleep_guide", "development", "care_guide") -> {
+                navigateToPremiumContent(route)
+            }
+            // Rota de checklist com categoria
+            route.startsWith("checklist/") -> {
+                navController.navigate(route)
+            }
+            // Outras rotas
+            else -> {
+                navController.navigate(route)
+            }
+        }
+    }
+    
+    // Telas que devem mostrar o drawer (tela principal)
+    val showDrawer = currentRoute == Screen.Home.route
+    
+    // Wrapper com Drawer para a tela Home
+    if (showDrawer) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                AppDrawer(
+                    currentRoute = currentRoute,
+                    momName = userData.momName,
+                    currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20,
+                    isPremium = isPremium,
+                    onNavigate = { route ->
+                        scope.launch { drawerState.close() }
+                        handleNavigation(route)
+                    },
+                    onClose = { scope.launch { drawerState.close() } }
+                )
+            }
+        ) {
+            AppNavigationContent(
+                navController = navController,
+                startDestination = startDestination,
+                userData = userData,
+                isPremium = isPremium,
+                onOpenDrawer = { scope.launch { drawerState.open() } },
+                onNavigate = ::handleNavigation
+            )
+        }
+    } else {
+        AppNavigationContent(
+            navController = navController,
+            startDestination = startDestination,
+            userData = userData,
+            isPremium = isPremium,
+            onOpenDrawer = { },
+            onNavigate = ::handleNavigation
+        )
+    }
+}
+
+@Composable
+private fun AppNavigationContent(
+    navController: NavHostController,
+    startDestination: String,
+    userData: UserData,
+    isPremium: Boolean,
+    onOpenDrawer: () -> Unit,
+    onNavigate: (String) -> Unit
+) {
+    val currentWeek = remember(userData.currentWeek) { userData.currentWeek.takeIf { it > 0 } ?: 20 }
+    
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -128,91 +217,64 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
         
+        // NOVA HOME - Dashboard com Drawer
         composable(Screen.Home.route) {
-            HomeScreen(
+            DashboardScreen(
+                userData = userData,
                 isPremium = isPremium,
-                onCategoryClick = { category ->
-                    navController.navigate(Screen.Checklist.createRoute(category))
-                },
-                onSleepGuideClick = {
-                    navigateToPremiumContent(Screen.SleepGuide.route)
-                },
-                onDevelopmentClick = {
-                    navigateToPremiumContent(Screen.Development.route)
-                },
-                onCareGuideClick = {
-                    navigateToPremiumContent(Screen.CareGuide.route)
-                },
-                onSubscriptionClick = {
-                    navController.navigate(Screen.Subscription.route)
-                },
-                // Novos callbacks para o ecossistema do bebê
-                onDiaryClick = {
-                    navigateToPremiumContent(Screen.Diary.route)
-                },
-                onDocumentsClick = {
-                    navigateToPremiumContent(Screen.Documents.route)
-                },
-                onHistoryClick = {
-                    navigateToPremiumContent(Screen.History.route)
-                },
-                onGrowthClick = {
-                    navigateToPremiumContent(Screen.Growth.route)
-                },
-                onSearchClick = {
-                    navigateToPremiumContent(Screen.Search.route)
-                },
-                onSettingsClick = {
-                    navController.navigate(Screen.Settings.route)
-                },
-                // NOVOS CALLBACKS - Expansão da Gestação (ADITIVOS)
-                onWeeklyChecklistClick = {
-                    navController.navigate(Screen.WeeklyChecklist.route)
-                },
-                onTimelineClick = {
-                    navController.navigate(Screen.Timeline.route)
-                },
-                onPregnancyContentClick = {
-                    navController.navigate(Screen.PregnancyContent.route)
-                },
-                // NOVOS CALLBACKS - Expansão v2.0
-                onBellyGalleryClick = {
-                    navController.navigate(Screen.BellyGallery.route)
-                },
-                onBabyLetterClick = {
-                    navController.navigate(Screen.BabyLetter.route)
-                },
-                onBabyShowerClick = {
-                    navController.navigate(Screen.BabyShower.route)
-                },
-                onContractionClick = {
-                    navController.navigate(Screen.Contraction.route)
-                },
-                onReminderClick = {
-                    navController.navigate(Screen.Reminder.route)
-                },
-                onNotificationSettingsClick = {
-                    navController.navigate(Screen.NotificationSettings.route)
-                },
-                onAdoptionClick = {
-                    navController.navigate(Screen.Adoption.route)
-                },
-                // Ferramentas Essenciais
-                onDueDateCalculatorClick = {
-                    navController.navigate(Screen.DueDateCalculator.route)
-                },
-                onKickCounterClick = {
-                    navController.navigate(Screen.KickCounter.route)
-                },
-                onBabySizeClick = {
-                    navController.navigate(Screen.BabySize.route)
-                },
-                onBabyNamesClick = {
-                    navController.navigate(Screen.BabyNames.route)
-                },
-                onBirthPlanClick = {
-                    navController.navigate(Screen.BirthPlan.route)
-                }
+                onOpenDrawer = onOpenDrawer,
+                onNavigate = onNavigate
+            )
+        }
+        
+        // ============ NOVAS TELAS DE SEÇÃO ============
+        
+        composable(Screen.SectionPregnancy.route) {
+            PregnancySectionScreen(
+                currentWeek = currentWeek,
+                isPremium = isPremium,
+                onBackClick = { navController.popBackStack() },
+                onNavigate = onNavigate
+            )
+        }
+        
+        composable(Screen.SectionTools.route) {
+            ToolsSectionScreen(
+                isPremium = isPremium,
+                onBackClick = { navController.popBackStack() },
+                onNavigate = onNavigate
+            )
+        }
+        
+        composable(Screen.SectionBaby.route) {
+            BabySectionScreen(
+                isPremium = isPremium,
+                onBackClick = { navController.popBackStack() },
+                onNavigate = onNavigate
+            )
+        }
+        
+        composable(Screen.SectionChecklists.route) {
+            ChecklistsSectionScreen(
+                isPremium = isPremium,
+                onBackClick = { navController.popBackStack() },
+                onNavigate = onNavigate
+            )
+        }
+        
+        composable(Screen.SectionGuides.route) {
+            GuidesSectionScreen(
+                isPremium = isPremium,
+                onBackClick = { navController.popBackStack() },
+                onNavigate = onNavigate
+            )
+        }
+        
+        composable(Screen.SectionSpecial.route) {
+            SpecialSectionScreen(
+                isPremium = isPremium,
+                onBackClick = { navController.popBackStack() },
+                onNavigate = onNavigate
             )
         }
         

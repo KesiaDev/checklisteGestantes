@@ -241,8 +241,14 @@ fun AITipCard(
     }
 }
 
+// Gradiente cacheado para o card de celebração
+private val CelebrationGradient = Brush.verticalGradient(
+    colors = listOf(Color(0xFFFFF8E1), Color(0xFFFFF3E0))
+)
+
 /**
  * Card de celebração animado
+ * OTIMIZADO: Animação de confete removida (consumia CPU desnecessariamente)
  */
 @Composable
 fun AICelebrationCard(
@@ -255,18 +261,6 @@ fun AICelebrationCard(
         targetValue = if (visible) 1f else 0f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
-    )
-    
-    // Animação de confete
-    val infiniteTransition = rememberInfiniteTransition(label = "confetti")
-    val confettiOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "confetti"
     )
     
     AnimatedVisibility(
@@ -288,14 +282,7 @@ fun AICelebrationCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFFFFF8E1),
-                                Color(0xFFFFF3E0)
-                            )
-                        )
-                    )
+                    .background(CelebrationGradient)
             ) {
                 Column(
                     modifier = Modifier
@@ -303,10 +290,8 @@ fun AICelebrationCard(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Emojis de celebração animados
-                    Row(
-                        modifier = Modifier.offset(y = confettiOffset.dp)
-                    ) {
+                    // Emojis de celebração (estáticos para performance)
+                    Row {
                         Text(text = "🎉", fontSize = 32.sp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "✨", fontSize = 32.sp)
@@ -490,8 +475,21 @@ fun AIQuestionCard(
     }
 }
 
+// Gradientes cacheados para evitar recriação a cada recomposição
+private val LumiBannerGradient = Brush.horizontalGradient(
+    colors = listOf(
+        LumiGradientStart.copy(alpha = 0.3f),
+        LumiGradientEnd.copy(alpha = 0.1f)
+    )
+)
+
+private val LumiAvatarGradient = Brush.radialGradient(
+    colors = listOf(LumiGradientStart, LumiGradientEnd)
+)
+
 /**
  * Banner de boas-vindas da IA
+ * OTIMIZADO: Removida animação infinita que consumia CPU
  */
 @Composable
 fun AIWelcomeBanner(
@@ -499,8 +497,9 @@ fun AIWelcomeBanner(
     currentWeek: Int,
     modifier: Modifier = Modifier
 ) {
-    val greeting = remember { AICompanion.getGreeting() }
-    val funFact = remember { AICompanion.getFunFact(currentWeek) }
+    // Cache das mensagens para evitar recálculo
+    val greeting = remember(currentWeek) { AICompanion.getGreeting() }
+    val funFact = remember(currentWeek) { AICompanion.getFunFact(currentWeek) }
     
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -512,14 +511,7 @@ fun AIWelcomeBanner(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            LumiGradientStart.copy(alpha = 0.3f),
-                            LumiGradientEnd.copy(alpha = 0.1f)
-                        )
-                    )
-                )
+                .background(LumiBannerGradient)
         ) {
             Column(
                 modifier = Modifier
@@ -529,30 +521,12 @@ fun AIWelcomeBanner(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Avatar animado
-                    val infiniteTransition = rememberInfiniteTransition(label = "glow")
-                    val glowAlpha by infiniteTransition.animateFloat(
-                        initialValue = 0.5f,
-                        targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1000),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "glow"
-                    )
-                    
+                    // Avatar ESTÁTICO (removida animação infinita que consumia CPU)
                     Box(
                         modifier = Modifier
                             .size(50.dp)
                             .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        LumiGradientStart.copy(alpha = glowAlpha),
-                                        LumiGradientEnd
-                                    )
-                                )
-                            ),
+                            .background(LumiAvatarGradient),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(text = "✨", fontSize = 26.sp)
@@ -755,6 +729,7 @@ fun AIHelpDialog(
 
 /**
  * Indicador de progresso com celebração da IA
+ * OTIMIZADO: Animação de celebração removida (só mostrava quando 100%)
  */
 @Composable
 fun AIProgressCelebration(
@@ -769,22 +744,10 @@ fun AIProgressCelebration(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (showCelebration) {
-            // Animação de celebração
-            val infiniteTransition = rememberInfiniteTransition(label = "celebration")
-            val scale by infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 1.1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(500),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "scale"
-            )
-            
+            // Emojis estáticos (removida animação infinita)
             Text(
                 text = "🎉✨🎊",
-                fontSize = 32.sp,
-                modifier = Modifier.scale(scale)
+                fontSize = 32.sp
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -802,7 +765,7 @@ fun AIProgressCelebration(
             Spacer(modifier = Modifier.height(8.dp))
             
             LinearProgressIndicator(
-                progress = progress,
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
                     .height(8.dp)

@@ -452,6 +452,9 @@ private fun PhotoGridItem(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(photo.photoUri)
                     .crossfade(true)
+                    .size(300) // Tamanho fixo para cache eficiente
+                    .memoryCacheKey("belly_${photo.week}")
+                    .diskCacheKey("belly_${photo.week}")
                     .build(),
                 contentDescription = "Semana ${photo.week}",
                 contentScale = ContentScale.Crop,

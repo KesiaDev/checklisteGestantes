@@ -75,6 +75,29 @@ import com.gestantes.checklist.ui.theme.getIconMaternidade
 import com.gestantes.checklist.ui.theme.getIconPosparto
 import com.gestantes.checklist.ui.theme.getIconPrenatal
 
+// ==================== GRADIENTES CACHEADOS PARA PERFORMANCE ====================
+// Evita recriação de objetos Brush a cada recomposição
+
+private val PremiumBadgeGradient = Brush.horizontalGradient(
+    colors = listOf(Color(0xFFFFB800), Color(0xFFFFD54F))
+)
+
+private val GreenBadgeGradient = Brush.horizontalGradient(
+    colors = listOf(Color(0xFF10B981), Color(0xFF34D399))
+)
+
+private val AdoptionBackgroundGradient = Brush.horizontalGradient(
+    colors = listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7).copy(alpha = 0.3f))
+)
+
+private val AdoptionLineGradient = Brush.verticalGradient(
+    colors = listOf(Color(0xFF9C27B0), Color(0xFFE91E63))
+)
+
+private val AdoptionIconGradient = Brush.linearGradient(
+    colors = listOf(Color(0xFF9C27B0).copy(alpha = 0.2f), Color(0xFF7B1FA2).copy(alpha = 0.3f))
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -196,6 +219,11 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
+        // Cache da semana atual para evitar recálculos
+        val currentWeek = remember(userData.currentWeek) { 
+            userData.currentWeek.takeIf { it > 0 } ?: 20 
+        }
+        
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -203,26 +231,27 @@ fun HomeScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
+            // OTIMIZAÇÃO: Usando keys para melhorar recomposições
+            item(key = "welcome") {
                 WelcomeCard(userData = userData)
             }
             
             // ✨ Banner da IA Lumi - Companheira da Gestante
-            item {
+            item(key = "ai_banner") {
                 AIWelcomeBanner(
                     momName = userData.momName,
-                    currentWeek = userData.currentWeek.takeIf { it > 0 } ?: 20
+                    currentWeek = currentWeek
                 )
             }
             
             // Dica contextual da Lumi
-            item {
-                val tip = remember { AICompanion.getTip(AICompanion.Context.HOME, userData.currentWeek.takeIf { it > 0 } ?: 20) }
+            item(key = "ai_tip") {
+                val tip = remember(currentWeek) { AICompanion.getTip(AICompanion.Context.HOME, currentWeek) }
                 AITipCard(message = tip)
             }
             
             // ============ MINHA GESTAÇÃO (NOVA SEÇÃO - ADITIVA) ============
-            item {
+            item(key = "section_gestacao") {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "🤰 Minha Gestação",
@@ -690,6 +719,7 @@ private fun QuickAccessCard(
 
 /**
  * Card MODERNO do Ecossistema do Bebê (Premium)
+ * OTIMIZADO: Gradientes cacheados para melhor performance
  */
 @Composable
 private fun BabyEcosystemCard(
@@ -700,6 +730,17 @@ private fun BabyEcosystemCard(
     isPremium: Boolean,
     onClick: () -> Unit
 ) {
+    // Cache dos gradientes baseados na cor
+    val backgroundGradient = remember(color) {
+        Brush.horizontalGradient(listOf(Color.White, color.copy(alpha = 0.05f)))
+    }
+    val iconGradient = remember(color) {
+        Brush.linearGradient(listOf(color.copy(alpha = 0.15f), color.copy(alpha = 0.25f)))
+    }
+    val lineGradient = remember(color) {
+        Brush.verticalGradient(listOf(color, color.copy(alpha = 0.5f)))
+    }
+    
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -712,14 +753,7 @@ private fun BabyEcosystemCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.White,
-                            color.copy(alpha = 0.05f)
-                        )
-                    )
-                )
+                .background(backgroundGradient)
         ) {
             Row(
                 modifier = Modifier
@@ -727,25 +761,13 @@ private fun BabyEcosystemCard(
                     .padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Ícone com gradiente moderno
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    color.copy(alpha = 0.15f),
-                                    color.copy(alpha = 0.25f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
+                        .background(brush = iconGradient, shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = emoji,
-                        fontSize = 28.sp
-                    )
+                    Text(text = emoji, fontSize = 28.sp)
                 }
                 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -760,18 +782,10 @@ private fun BabyEcosystemCard(
                         )
                         if (!isPremium) {
                             Spacer(modifier = Modifier.width(8.dp))
-                            // Badge Premium com gradiente dourado
+                            // Badge Premium com gradiente cacheado
                             Box(
                                 modifier = Modifier
-                                    .background(
-                                        brush = Brush.horizontalGradient(
-                                            colors = listOf(
-                                                Color(0xFFFFB800),
-                                                Color(0xFFFFD54F)
-                                            )
-                                        ),
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
+                                    .background(brush = PremiumBadgeGradient, shape = RoundedCornerShape(12.dp))
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -806,10 +820,7 @@ private fun BabyEcosystemCard(
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .background(
-                                color = Color(0xFFF3F4F6),
-                                shape = CircleShape
-                            ),
+                            .background(color = Color(0xFFF3F4F6), shape = CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -822,21 +833,13 @@ private fun BabyEcosystemCard(
                 }
             }
             
-            // Linha decorativa lateral com a cor do card
+            // Linha decorativa lateral
             Box(
                 modifier = Modifier
                     .width(4.dp)
                     .height(40.dp)
                     .align(Alignment.CenterStart)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                color,
-                                color.copy(alpha = 0.5f)
-                            )
-                        ),
-                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
-                    )
+                    .background(brush = lineGradient, shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
             )
         }
     }
@@ -1280,7 +1283,7 @@ private fun DisclaimerText() {
 
 /**
  * Card MODERNO para as novas funcionalidades da gestação
- * Design limpo sem bordas, com sombra suave e gradiente
+ * OTIMIZADO: Gradientes cacheados para melhor performance
  */
 @Composable
 private fun PregnancyFeatureCard(
@@ -1290,6 +1293,17 @@ private fun PregnancyFeatureCard(
     color: Color,
     onClick: () -> Unit
 ) {
+    // Cache dos gradientes baseados na cor
+    val backgroundGradient = remember(color) {
+        Brush.horizontalGradient(listOf(Color.White, color.copy(alpha = 0.05f)))
+    }
+    val iconGradient = remember(color) {
+        Brush.linearGradient(listOf(color.copy(alpha = 0.15f), color.copy(alpha = 0.25f)))
+    }
+    val lineGradient = remember(color) {
+        Brush.verticalGradient(listOf(color, color.copy(alpha = 0.5f)))
+    }
+    
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -1302,14 +1316,7 @@ private fun PregnancyFeatureCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.White,
-                            color.copy(alpha = 0.05f)
-                        )
-                    )
-                )
+                .background(backgroundGradient)
         ) {
             Row(
                 modifier = Modifier
@@ -1317,25 +1324,13 @@ private fun PregnancyFeatureCard(
                     .padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Ícone com gradiente moderno
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    color.copy(alpha = 0.15f),
-                                    color.copy(alpha = 0.25f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
+                        .background(brush = iconGradient, shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = emoji,
-                        fontSize = 28.sp
-                    )
+                    Text(text = emoji, fontSize = 28.sp)
                 }
                 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -1356,18 +1351,10 @@ private fun PregnancyFeatureCard(
                     )
                 }
                 
-                // Badge moderno com gradiente
+                // Badge com gradiente cacheado
                 Box(
                     modifier = Modifier
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color(0xFF10B981),
-                                    Color(0xFF34D399)
-                                )
-                            ),
-                            shape = RoundedCornerShape(20.dp)
-                        )
+                        .background(brush = GreenBadgeGradient, shape = RoundedCornerShape(20.dp))
                         .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
                     Text(
@@ -1386,15 +1373,7 @@ private fun PregnancyFeatureCard(
                     .width(4.dp)
                     .height(40.dp)
                     .align(Alignment.CenterStart)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                color,
-                                color.copy(alpha = 0.5f)
-                            )
-                        ),
-                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
-                    )
+                    .background(brush = lineGradient, shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
             )
         }
     }
